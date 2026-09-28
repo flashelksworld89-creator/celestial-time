@@ -1,6 +1,7 @@
 export const signs = ["Aries","Taurus","Gemini","Cancer","Leo","Virgo","Libra","Scorpio","Sagittarius","Capricorn","Aquarius","Pisces"] as const;
 export type Sign = typeof signs[number];
 export type Planet = "Sun"|"Moon"|"Mars"|"Mercury"|"Jupiter"|"Venus"|"Saturn"|"Rahu"|"Ketu";
+export type ClassicalPlanet = Exclude<Planet,"Rahu"|"Ketu">;
 
 export const signLords: Record<Sign, Planet> = {
   Aries:"Mars", Taurus:"Venus", Gemini:"Mercury", Cancer:"Moon", Leo:"Sun", Virgo:"Mercury",
@@ -26,7 +27,68 @@ export const naturalMeanings: Record<Planet,string> = {
   Ketu:"separation, simplification, detachment, past-patterns and inward focus"
 };
 
-export type Placement = { planet: Planet; sign: Sign; degree: number; house?: number; nakshatra?: string; pada?: number; aspects?: string[] };
+const ownSigns: Record<ClassicalPlanet, Sign[]> = {
+  Sun:["Leo"], Moon:["Cancer"], Mars:["Aries","Scorpio"], Mercury:["Gemini","Virgo"],
+  Jupiter:["Sagittarius","Pisces"], Venus:["Taurus","Libra"], Saturn:["Capricorn","Aquarius"]
+};
+
+const exaltation: Record<ClassicalPlanet,{sign:Sign;degree:number}> = {
+  Sun:{sign:"Aries",degree:10}, Moon:{sign:"Taurus",degree:3}, Mars:{sign:"Capricorn",degree:28},
+  Mercury:{sign:"Virgo",degree:15}, Jupiter:{sign:"Cancer",degree:5}, Venus:{sign:"Pisces",degree:27},
+  Saturn:{sign:"Libra",degree:20}
+};
+
+const debilitation: Record<ClassicalPlanet,{sign:Sign;degree:number}> = {
+  Sun:{sign:"Libra",degree:10}, Moon:{sign:"Scorpio",degree:3}, Mars:{sign:"Cancer",degree:28},
+  Mercury:{sign:"Pisces",degree:15}, Jupiter:{sign:"Capricorn",degree:5}, Venus:{sign:"Virgo",degree:27},
+  Saturn:{sign:"Aries",degree:20}
+};
+
+const moolatrikona: Partial<Record<ClassicalPlanet,{sign:Sign;from:number;to:number}>> = {
+  Sun:{sign:"Leo",from:0,to:20},
+  Moon:{sign:"Taurus",from:4,to:30},
+  Mars:{sign:"Aries",from:0,to:12},
+  Mercury:{sign:"Virgo",from:16,to:20},
+  Jupiter:{sign:"Sagittarius",from:0,to:10},
+  Venus:{sign:"Libra",from:0,to:15},
+  Saturn:{sign:"Aquarius",from:0,to:20}
+};
+
+const naturalFriends: Record<ClassicalPlanet,ClassicalPlanet[]> = {
+  Sun:["Moon","Mars","Jupiter"],
+  Moon:["Sun","Mercury"],
+  Mars:["Sun","Moon","Jupiter"],
+  Mercury:["Sun","Venus"],
+  Jupiter:["Sun","Moon","Mars"],
+  Venus:["Mercury","Saturn"],
+  Saturn:["Mercury","Venus"]
+};
+
+const naturalEnemies: Record<ClassicalPlanet,ClassicalPlanet[]> = {
+  Sun:["Venus","Saturn"],
+  Moon:[],
+  Mars:["Mercury"],
+  Mercury:["Moon"],
+  Jupiter:["Mercury","Venus"],
+  Venus:["Sun","Moon"],
+  Saturn:["Sun","Moon","Mars"]
+};
+
+export type Dignity = "exalted"|"moolatrikona"|"own sign"|"friend sign"|"neutral sign"|"enemy sign"|"debilitated"|"node";
+
+export type Placement = {
+  planet: Planet;
+  sign: Sign;
+  degree: number;
+  house?: number;
+  nakshatra?: string;
+  pada?: number;
+  aspects?: string[];
+  dignity?: Dignity;
+  dispositor?: Planet;
+  conjunctions?: Planet[];
+  receivesAspectsFrom?: Planet[];
+};
 
 export function houseSigns(asc: Sign): Sign[] {
   const start = signs.indexOf(asc);
@@ -35,6 +97,40 @@ export function houseSigns(asc: Sign): Sign[] {
 
 export function houseLords(asc: Sign) {
   return houseSigns(asc).map((sign,i)=>({house:i+1, sign, lord:signLords[sign], lifeArea:lifeAreas[i]}));
+}
+
+export function dignityFor(planet:Planet, sign:Sign, degree:number):Dignity {
+  if (planet==="Rahu" || planet==="Ketu") return "node";
+  const p=planet as ClassicalPlanet;
+  if (exaltation[p].sign===sign) return "exalted";
+  if (debilitation[p].sign===sign) return "debilitated";
+  const mt=moolatrikona[p];
+  if (mt && mt.sign===sign && degree>=mt.from && degree<mt.to) return "moolatrikona";
+  if (ownSigns[p].includes(sign)) return "own sign";
+
+  const lord=signLords[sign];
+  if (lord==="Rahu" || lord==="Ketu") return "neutral sign";
+  const signLord=lord as ClassicalPlanet;
+  if (naturalFriends[p].includes(signLord)) return "friend sign";
+  if (naturalEnemies[p].includes(signLord)) return "enemy sign";
+  return "neutral sign";
+}
+
+export function dispositorFor(sign:Sign):Planet {
+  return signLords[sign];
+}
+
+export function conditionTone(dignity?:Dignity) {
+  switch(dignity) {
+    case "exalted": return "strongly supported and able to express its significations with unusual force";
+    case "moolatrikona": return "stable, purposeful and strongly rooted in its own agenda";
+    case "own sign": return "well supported and able to act with relative consistency";
+    case "friend sign": return "supported by the sign environment";
+    case "enemy sign": return "under friction and likely to require adjustment or effort";
+    case "debilitated": return "under strain, with its themes more likely to require compensation or conscious management";
+    case "neutral sign": return "mixed or context-dependent rather than inherently helped or hindered";
+    default: return "best judged through its house, dispositor, aspects and conjunctions";
+  }
 }
 
 const karakas7 = ["Atmakaraka","Amatyakaraka","Bhratrikaraka","Matrikaraka","Putrakaraka","Gnatikaraka","Darakaraka"];
@@ -62,11 +158,19 @@ export function interpretationFor(args:{
 }) {
   const {house,lifeArea,lord,natal,transit,karaka}=args;
   const natalText = natal
-    ? `Natal ${lord} is in ${natal.sign} at ${natal.degree.toFixed(1)}°, giving the ${lifeArea.toLowerCase()} story a ${natal.sign} expression.`
-    : `The natal condition of ${lord} will define the baseline once a precise natal ephemeris is connected.`;
+    ? `Natal ${lord} is in house ${natal.house ?? "?"}, ${natal.sign} at ${natal.degree.toFixed(1)}° (${natal.nakshatra ?? "nakshatra"} P${natal.pada ?? "?"}). Its dignity is ${natal.dignity ?? "unclassified"}, so this ruler is ${conditionTone(natal.dignity)}. Its dispositor is ${natal.dispositor ?? dispositorFor(natal.sign)}.`
+    : `The natal condition of ${lord} defines the baseline for this life area.`;
+  const conjunctionText = natal?.conjunctions?.length
+    ? ` It is joined by ${natal.conjunctions.join(", ")}, tying those planetary themes directly into this natal life-area ruler.`
+    : "";
+  const aspectText = natal?.receivesAspectsFrom?.length
+    ? ` It receives Jyotish sign aspects from ${natal.receivesAspectsFrom.join(", ")}.`
+    : "";
   const transitText = transit
-    ? `Today ${lord} is transiting ${transit.sign} at ${transit.degree.toFixed(1)}° and activates house ${transit.house}; current events in this life area are read through that changing condition.`
-    : `Today's transit condition is awaiting the precision ephemeris adapter.`;
-  const karakaText = karaka ? ` ${lord} is also your ${karaka}, so that Chara Karaka role is tracked separately rather than being blended invisibly into the house-lord meaning.` : "";
-  return `House ${house} — ${lifeArea}: ${lord} rules this area. As a natural significator it carries themes of ${naturalMeanings[lord]}. ${natalText} ${transitText}${karakaText}`;
+    ? ` Today ${lord} is transiting house ${transit.house}, ${transit.sign} at ${transit.degree.toFixed(1)}° (${transit.nakshatra ?? "nakshatra"} P${transit.pada ?? "?"}), with ${transit.dignity ?? "mixed"} dignity. This is the current moving condition of the planet governing ${lifeArea.toLowerCase()}.`
+    : "";
+  const karakaText = karaka
+    ? ` ${lord} is also ${karaka}; that Chara Karaka role is tracked as a separate layer rather than treated as the same thing as house lordship.`
+    : "";
+  return `House ${house} — ${lifeArea}: ${lord} rules this area and naturally signifies ${naturalMeanings[lord]}. ${natalText}${conjunctionText}${aspectText}${transitText}${karakaText}`;
 }
