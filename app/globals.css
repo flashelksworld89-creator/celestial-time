@@ -23,3 +23,11 @@
 .vedic-chart-legend{display:flex;flex-wrap:wrap;gap:8px 14px;color:var(--muted);font-size:.75rem}
 .vedic-chart-legend b{color:var(--accent);font-weight:700}
 @media(max-width:760px){.vedic-chart-heading{align-items:flex-start}.vedic-chart-grid{grid-template-columns:repeat(2,1fr);grid-template-rows:none;min-height:0}.vedic-house{grid-column:auto!important;grid-row:auto!important;min-height:92px}.vedic-lagna{text-align:left}}
+
+.vedika-panel{padding:22px;margin:20px 0}
+.vedika-heading{display:flex;justify-content:space-between;gap:18px;align-items:flex-end}
+.vedika-heading h2{margin:.3rem 0 0}
+.vedika-note{color:var(--muted);line-height:1.55;font-size:.86rem;margin:14px 0 0}
+.vedika-output{margin-top:18px;padding:18px;border:1px solid var(--line);border-radius:14px;background:#0b101b;white-space:pre-wrap;line-height:1.7;color:#e7e9ef}
+.vedika-error{margin-top:14px;padding:12px 14px;border:1px solid #6b3030;border-radius:10px;background:#241213;color:var(--danger);font-size:.86rem}
+@media(max-width:760px){.vedika-heading{display:grid;align-items:start}.vedika-heading .primary{width:100%}}
