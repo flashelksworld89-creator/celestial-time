@@ -2,6 +2,7 @@
 
 import { FormEvent, useMemo, useState } from "react";
 import { interpretationFor, Planet, Sign } from "@/lib/astrology";
+import NorthIndianChart from "@/components/NorthIndianChart";
 
 type Placement = {
   planet: Planet;
@@ -260,6 +261,12 @@ export default function Home() {
               <strong>{formatDegree(chart.ayanamsa)}</strong>
             </div>
           </section>
+
+          <NorthIndianChart
+            ascendant={chart.ascendant}
+            houses={chart.houses}
+            natal={chart.natal}
+          />
 
           <section className="planet-strip panel">
             {chart.natal.map((planet) => (
