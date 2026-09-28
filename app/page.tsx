@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useMemo, useState } from "react";
-import { interpretationFor, Planet, Sign } from "@/lib/astrology";
+import { interpretationFor, Planet, Sign, Dignity } from "@/lib/astrology";
 import NorthIndianChart from "@/components/NorthIndianChart";
 
 type Placement = {
@@ -15,7 +15,7 @@ type Placement = {
   retrograde: boolean;
   charaKaraka?: string;
   aspectsToNatal?: string[];
-  dignity?: string;
+  dignity?: Dignity;
   dispositor?: Planet;
   conjunctions?: Planet[];
   receivesAspectsFrom?: Planet[];
