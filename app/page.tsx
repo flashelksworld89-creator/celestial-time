@@ -24,6 +24,12 @@ type Chart = {
     node: string;
     charaKarakaSystem: 7 | 8;
   };
+  location: {
+    name: string;
+    latitude: number;
+    longitude: number;
+    timeZone: string;
+  };
   birthUtc: string;
   calculatedAt: string;
   ayanamsa: number;
@@ -49,9 +55,8 @@ export default function Home() {
   const [form, setForm] = useState({
     date: "1990-01-01",
     time: "12:00",
-    utcOffset: "-8",
-    latitude: "36.1699",
-    longitude: "-115.1398",
+    city: "",
+    state: "",
     karakaMode: "7",
   });
   const [chart, setChart] = useState<Chart | null>(null);
@@ -74,9 +79,6 @@ export default function Home() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...form,
-          utcOffset: Number(form.utcOffset),
-          latitude: Number(form.latitude),
-          longitude: Number(form.longitude),
           karakaMode: Number(form.karakaMode),
         }),
       });
@@ -98,12 +100,13 @@ export default function Home() {
     setFeedback(next);
 
     const record = {
-      version: "0.2.1",
+      version: "0.3.0",
       savedAt: new Date().toISOString(),
       chart: {
         birthUtc: chart.birthUtc,
         ascendant: chart.ascendant,
         settings: chart.settings,
+        location: chart.location,
       },
       house,
       response: value,
@@ -146,8 +149,8 @@ export default function Home() {
             <h2>Birth data</h2>
           </div>
           <p>
-            Enter the exact local birth time and coordinates. UTC offset should match the location
-            on the birth date, including daylight-saving time when applicable.
+            Enter the birth date, exact local birth time, city, and state. Celestial Time will
+            calculate the coordinates and historical time zone automatically.
           </p>
         </div>
 
@@ -171,38 +174,22 @@ export default function Home() {
             />
           </label>
           <label>
-            UTC offset
+            Birth city
             <input
-              type="number"
-              step="0.25"
-              min="-14"
-              max="14"
-              value={form.utcOffset}
-              onChange={(e) => setForm({ ...form, utcOffset: e.target.value })}
+              type="text"
+              placeholder="Las Vegas"
+              value={form.city}
+              onChange={(e) => setForm({ ...form, city: e.target.value })}
               required
             />
           </label>
           <label>
-            Latitude
+            State
             <input
-              type="number"
-              step="0.0001"
-              min="-90"
-              max="90"
-              value={form.latitude}
-              onChange={(e) => setForm({ ...form, latitude: e.target.value })}
-              required
-            />
-          </label>
-          <label>
-            Longitude
-            <input
-              type="number"
-              step="0.0001"
-              min="-180"
-              max="180"
-              value={form.longitude}
-              onChange={(e) => setForm({ ...form, longitude: e.target.value })}
+              type="text"
+              placeholder="Nevada or NV"
+              value={form.state}
+              onChange={(e) => setForm({ ...form, state: e.target.value })}
               required
             />
           </label>
@@ -220,7 +207,7 @@ export default function Home() {
 
         <div className="submit-row">
           <button className="primary" type="submit" disabled={loading}>
-            {loading ? "Calculating…" : "Calculate Celestial Time"}
+            {loading ? "Finding location & calculating…" : "Calculate Celestial Time"}
           </button>
           {error && <span className="error">{error}</span>}
         </div>
@@ -230,14 +217,25 @@ export default function Home() {
         <section className="empty-state">
           <strong>Ready for a real chart.</strong>
           <span>
-            The dashboard will populate with natal rulers, nakshatras, padas, Chara Karakas,
-            current transits, and feedback controls after calculation.
+            Enter city and state instead of coordinates. The app will find the birth location,
+            resolve its time zone, and calculate the sidereal natal chart automatically.
           </span>
         </section>
       )}
 
       {chart && (
         <>
+          <section className="location-banner panel">
+            <div>
+              <small>Resolved birth location</small>
+              <strong>{chart.location.name}</strong>
+            </div>
+            <div>
+              <small>Time zone</small>
+              <strong>{chart.location.timeZone}</strong>
+            </div>
+          </section>
+
           <section className="summary">
             <div className="metric">
               <span>Ascendant</span>
