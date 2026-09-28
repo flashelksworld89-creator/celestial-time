@@ -38,7 +38,7 @@ export function houseLords(asc: Sign) {
 }
 
 const karakas7 = ["Atmakaraka","Amatyakaraka","Bhratrikaraka","Matrikaraka","Putrakaraka","Gnatikaraka","Darakaraka"];
-const karakas8 = ["Atmakaraka","Amatyakaraka","Bhratrikaraka","Matrikaraka","Putrakaraka","Gnatikaraka","Darakaraka","Pitri Karaka"];
+const karakas8 = ["Atmakaraka","Amatyakaraka","Bhratrikaraka","Matrikaraka","Pitri Karaka","Putrakaraka","Gnatikaraka","Darakaraka"];
 
 export function assignCharaKarakas(placements: Placement[], mode:7|8=7) {
   const allowed: Planet[] = mode===8
