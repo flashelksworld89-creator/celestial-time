@@ -68,6 +68,9 @@ export default function Home() {
   const [feedback, setFeedback] = useState<Record<string, Feedback>>({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [vedikaText, setVedikaText] = useState("");
+  const [vedikaError, setVedikaError] = useState("");
+  const [vedikaLoading, setVedikaLoading] = useState(false);
 
   const atmakaraka = useMemo(
     () => chart?.natal.find((p) => p.charaKaraka === "Atmakaraka"),
@@ -91,10 +94,39 @@ export default function Home() {
       if (!response.ok) throw new Error(data.error || "Chart calculation failed.");
       setChart(data);
       setFeedback({});
+      setVedikaText("");
+      setVedikaError("");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Chart calculation failed.");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function generateVedikaInterpretation() {
+    if (!chart) return;
+    setVedikaLoading(true);
+    setVedikaError("");
+    setVedikaText("");
+    try {
+      const response = await fetch("/api/vedika", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          date: form.date,
+          time: form.time,
+          latitude: chart.location.latitude,
+          longitude: chart.location.longitude,
+          timeZone: chart.location.timeZone,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Vedika interpretation failed.");
+      setVedikaText(data.answer);
+    } catch (err) {
+      setVedikaError(err instanceof Error ? err.message : "Vedika interpretation failed.");
+    } finally {
+      setVedikaLoading(false);
     }
   }
 
@@ -267,6 +299,29 @@ export default function Home() {
             houses={chart.houses}
             natal={chart.natal}
           />
+
+          <section className="panel vedika-panel">
+            <div className="vedika-heading">
+              <div>
+                <span className="house">VEDIKA TRANSIT INTERPRETER</span>
+                <h2>Current Transit Interpretation</h2>
+              </div>
+              <button
+                type="button"
+                className="primary"
+                onClick={generateVedikaInterpretation}
+                disabled={vedikaLoading}
+              >
+                {vedikaLoading ? "Interpreting…" : "Generate Vedika Interpretation"}
+              </button>
+            </div>
+            <p className="vedika-note">
+              Uses Vedika only for interpretive synthesis. Celestial Time keeps its own natal chart
+              and transit calculations visible for comparison. Dashas are intentionally excluded for now.
+            </p>
+            {vedikaError && <div className="vedika-error">{vedikaError}</div>}
+            {vedikaText && <div className="vedika-output">{vedikaText}</div>}
+          </section>
 
           <section className="planet-strip panel">
             {chart.natal.map((planet) => (
