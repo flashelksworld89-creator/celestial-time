@@ -4,3 +4,22 @@
 .location-banner small{color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-size:.67rem}
 .location-banner strong{font-size:.9rem;line-height:1.35}
 @media(max-width:700px){.location-banner{grid-template-columns:1fr}}
+
+.vedic-chart-panel{padding:22px;margin:20px 0}
+.vedic-chart-heading{display:flex;justify-content:space-between;gap:18px;align-items:flex-end;margin-bottom:18px}
+.vedic-chart-heading h2{margin:.3rem 0 0}
+.vedic-lagna{display:grid;gap:3px;text-align:right}
+.vedic-lagna small{color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-size:.68rem}
+.vedic-lagna strong{color:var(--accent)}
+.vedic-chart-wrap{display:grid;gap:14px}
+.vedic-chart-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-template-rows:repeat(4,minmax(92px,1fr));gap:8px;min-height:430px}
+.vedic-house{border:1px solid var(--line);background:linear-gradient(145deg,#121827,#0c111c);border-radius:14px;padding:10px;display:grid;align-content:start;gap:8px;position:relative;overflow:hidden}
+.vedic-house::after{content:"";position:absolute;inset:auto -35% -58% auto;width:100px;height:100px;border:1px solid #ffffff10;transform:rotate(45deg)}
+.vedic-house-meta{display:flex;justify-content:space-between;gap:8px;color:var(--muted);font-size:.72rem}
+.vedic-house-meta b{color:#d6dbeb;font-weight:600}
+.vedic-house-planets{display:flex;flex-wrap:wrap;gap:6px}
+.vedic-house-planets span{border:1px solid var(--line);background:#090e18;border-radius:999px;padding:5px 7px;font-size:.73rem;color:#dfe4f1}
+.vedic-house-planets .vedic-asc{border-color:var(--accent);color:var(--accent)}
+.vedic-chart-legend{display:flex;flex-wrap:wrap;gap:8px 14px;color:var(--muted);font-size:.75rem}
+.vedic-chart-legend b{color:var(--accent);font-weight:700}
+@media(max-width:760px){.vedic-chart-heading{align-items:flex-start}.vedic-chart-grid{grid-template-columns:repeat(2,1fr);grid-template-rows:none;min-height:0}.vedic-house{grid-column:auto!important;grid-row:auto!important;min-height:92px}.vedic-lagna{text-align:left}}
