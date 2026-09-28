@@ -10,14 +10,16 @@ import {
   julianDay,
   setSiderealMode
 } from "@swisseph/node";
+import { DateTime } from "luxon";
 import { Planet, Sign, signs, signLords, lifeAreas } from "./astrology";
 
 export type ChartRequest = {
   date: string;
   time: string;
-  utcOffset: number;
+  timeZone: string;
   latitude: number;
   longitude: number;
+  locationName?: string;
   karakaMode?: 7 | 8;
 };
 
@@ -55,13 +57,11 @@ const BODY_MAP: Array<[Planet, SwissPlanet | LunarPoint]> = [
 const normalize = (n:number) => ((n % 360) + 360) % 360;
 
 function parseLocalToUtc(input: ChartRequest) {
-  const [year,month,day] = input.date.split("-").map(Number);
-  const [hour,minute] = input.time.split(":").map(Number);
-  if (![year,month,day,hour,minute,input.utcOffset,input.latitude,input.longitude].every(Number.isFinite)) {
-    throw new Error("Invalid birth data.");
+  const local = DateTime.fromISO(`${input.date}T${input.time}`, { zone: input.timeZone });
+  if (!local.isValid) {
+    throw new Error(local.invalidExplanation || "Invalid birth date, time, or time zone.");
   }
-  const utcMs = Date.UTC(year,month-1,day,hour,minute,0) - input.utcOffset * 3600000;
-  return new Date(utcMs);
+  return local.toUTC().toJSDate();
 }
 
 function toJulian(date: Date) {
@@ -108,10 +108,10 @@ function charaAssignments(placements: CalculatedPlacement[], mode:7|8) {
 }
 
 function drishtiOffsets(planet:Planet) {
-  if (planet==="Mars") return [3,6,7];       // 4th, 7th, 8th
-  if (planet==="Jupiter") return [4,6,8];    // 5th, 7th, 9th
-  if (planet==="Saturn") return [2,6,9];     // 3rd, 7th, 10th
-  if (["Sun","Moon","Mercury","Venus"].includes(planet)) return [6]; // 7th
+  if (planet==="Mars") return [3,6,7];
+  if (planet==="Jupiter") return [4,6,8];
+  if (planet==="Saturn") return [2,6,9];
+  if (["Sun","Moon","Mercury","Venus"].includes(planet)) return [6];
   return [];
 }
 
@@ -163,9 +163,6 @@ export function calculateCelestialTimeChart(input:ChartRequest) {
   const birthJd=toJulian(birthUtc);
   const ayanamsa=getAyanamsa(birthJd);
 
-  // Swiss houses are calculated tropically here; subtracting the selected
-  // Lahiri ayanamsa yields the sidereal angles. Whole-sign houses then use
-  // the resulting sidereal Ascendant sign.
   const tropicalHouses=calculateHouses(birthJd,input.latitude,input.longitude,HouseSystem.WholeSign);
   const siderealAsc=normalize(tropicalHouses.ascendant-ayanamsa);
   const siderealMc=normalize(tropicalHouses.mc-ayanamsa);
@@ -199,6 +196,12 @@ export function calculateCelestialTimeChart(input:ChartRequest) {
       houseSystem:"Whole Sign",
       node:"Mean Rahu",
       charaKarakaSystem:input.karakaMode ?? 7
+    },
+    location:{
+      name:input.locationName ?? "",
+      latitude:input.latitude,
+      longitude:input.longitude,
+      timeZone:input.timeZone
     },
     birthUtc:birthUtc.toISOString(),
     calculatedAt:now.toISOString(),
