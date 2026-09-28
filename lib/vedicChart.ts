@@ -11,7 +11,7 @@ import {
   setSiderealMode
 } from "@swisseph/node";
 import { DateTime } from "luxon";
-import { Planet, Sign, signs, signLords, lifeAreas } from "./astrology";
+import { Planet, Sign, signs, signLords, lifeAreas, dignityFor, dispositorFor } from "./astrology";
 
 export type ChartRequest = {
   date: string;
@@ -34,6 +34,10 @@ export type CalculatedPlacement = {
   retrograde: boolean;
   charaKaraka?: string;
   aspectsToNatal?: string[];
+  dignity?: ReturnType<typeof dignityFor>;
+  dispositor?: Planet;
+  conjunctions?: Planet[];
+  receivesAspectsFrom?: Planet[];
 };
 
 const NAKSHATRAS = [
@@ -136,7 +140,9 @@ function basePlacements(jd:number, ascSign:Sign) {
       house:wholeSignHouse(ascSign,z.sign),
       nakshatra:n.nakshatra,
       pada:n.pada,
-      retrograde:position.longitudeSpeed<0
+      retrograde:position.longitudeSpeed<0,
+      dignity:dignityFor(planet,z.sign,z.degree),
+      dispositor:dispositorFor(z.sign)
     };
   });
 
@@ -152,7 +158,9 @@ function basePlacements(jd:number, ascSign:Sign) {
     house:wholeSignHouse(ascSign,kz.sign),
     nakshatra:kn.nakshatra,
     pada:kn.pada,
-    retrograde:rahu.retrograde
+    retrograde:rahu.retrograde,
+    dignity:dignityFor("Ketu",kz.sign,kz.degree),
+    dispositor:dispositorFor(kz.sign)
   });
   return output;
 }
@@ -169,6 +177,17 @@ export function calculateCelestialTimeChart(input:ChartRequest) {
   const asc=zodiac(siderealAsc);
 
   let natal=basePlacements(birthJd,asc.sign);
+
+  natal=natal.map(p=>{
+    const conjunctions=natal.filter(other=>other.planet!==p.planet && other.sign===p.sign).map(other=>other.planet);
+    const receivesAspectsFrom=natal.filter(other=>{
+      if (other.planet===p.planet) return false;
+      const from=signs.indexOf(other.sign);
+      return drishtiOffsets(other.planet).some(offset=>signs[(from+offset)%12]===p.sign);
+    }).map(other=>other.planet);
+    return {...p,conjunctions,receivesAspectsFrom};
+  });
+
   const karakas=charaAssignments(natal,input.karakaMode ?? 7);
   natal=natal.map(p=>({...p,charaKaraka:karakas.get(p.planet)}));
 
