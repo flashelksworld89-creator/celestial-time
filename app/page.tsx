@@ -14,6 +14,10 @@ type Placement = {
   retrograde: boolean;
   charaKaraka?: string;
   aspectsToNatal?: string[];
+  dignity?: string;
+  dispositor?: Planet;
+  conjunctions?: Planet[];
+  receivesAspectsFrom?: Planet[];
 };
 
 type Chart = {
@@ -268,6 +272,7 @@ export default function Home() {
                   {planet.nakshatra} · Pada {planet.pada}
                   {planet.retrograde ? " · Rx" : ""}
                 </small>
+                {planet.dignity && <small>{planet.dignity} · dispositor {planet.dispositor}</small>}
                 {planet.charaKaraka && <em>{planet.charaKaraka}</em>}
               </div>
             ))}
@@ -315,10 +320,20 @@ export default function Home() {
                         Transit H{transit.house} · {transit.sign} {formatDegree(transit.degree)}
                       </span>
                     )}
+                    {natal?.dignity && <span>{natal.dignity}</span>}
+                    {natal?.dispositor && <span>Dispositor {natal.dispositor}</span>}
                     {natal?.charaKaraka && <span>{natal.charaKaraka}</span>}
                   </div>
 
                   <p className="interpretation">{text}</p>
+
+                  {natal && ((natal.conjunctions?.length ?? 0) > 0 || (natal.receivesAspectsFrom?.length ?? 0) > 0) && (
+                    <div className="aspects">
+                      <small>Natal condition</small>
+                      {natal.conjunctions && natal.conjunctions.length > 0 && <p>Conjunct: {natal.conjunctions.join(" · ")}</p>}
+                      {natal.receivesAspectsFrom && natal.receivesAspectsFrom.length > 0 && <p>Receives aspects from: {natal.receivesAspectsFrom.join(" · ")}</p>}
+                    </div>
+                  )}
 
                   {transit && transit.aspectsToNatal && transit.aspectsToNatal.length > 0 && (
                     <div className="aspects">
