@@ -70,6 +70,7 @@ export default function Home() {
   const [error, setError] = useState("");
   const [jagannathaInterpretations, setJagannathaInterpretations] = useState<Record<number, string>>({});
   const [jagannathaDeepAnalysis, setJagannathaDeepAnalysis] = useState<Record<number, string>>({});
+  const [jagannathaKarakaAnalysis, setJagannathaKarakaAnalysis] = useState<Record<number, string>>({});
   const [jagannathaError, setJagannathaError] = useState("");
   const [jagannathaLoading, setJagannathaLoading] = useState(false);
   const [jagannathaValidated, setJagannathaValidated] = useState(false);
@@ -98,6 +99,7 @@ export default function Home() {
       setFeedback({});
       setJagannathaInterpretations({});
       setJagannathaDeepAnalysis({});
+      setJagannathaKarakaAnalysis({});
       setJagannathaError("");
       setJagannathaValidated(false);
     } catch (err) {
@@ -132,6 +134,7 @@ export default function Home() {
 
       const next: Record<number, string> = {};
       const deep: Record<number, string> = {};
+      const karaka: Record<number, string> = {};
       for (const item of data.interpretations ?? []) {
         if (typeof item.house === "number" && typeof item.interpretation === "string") {
           next[item.house] = item.interpretation;
@@ -139,9 +142,13 @@ export default function Home() {
         if (typeof item.house === "number" && typeof item.deepAnalysis === "string") {
           deep[item.house] = item.deepAnalysis;
         }
+        if (typeof item.house === "number" && typeof item.karakaAnalysis === "string") {
+          karaka[item.house] = item.karakaAnalysis;
+        }
       }
       setJagannathaInterpretations(next);
       setJagannathaDeepAnalysis(deep);
+      setJagannathaKarakaAnalysis(karaka);
       setJagannathaValidated(Boolean(data.validation?.horoscopeReceived && data.validation?.gocharaReceived));
     } catch (err) {
       setJagannathaError(err instanceof Error ? err.message : "Jagannatha Hora interpretation failed.");
@@ -431,8 +438,15 @@ export default function Home() {
 
                   {jagannathaDeepAnalysis[item.house] && (
                     <div className="deep-analysis">
-                      <small>What this transit can produce</small>
+                      <small>Effects on the houses this planet rules</small>
                       <p>{jagannathaDeepAnalysis[item.house]}</p>
+                    </div>
+                  )}
+
+                  {jagannathaKarakaAnalysis[item.house] && (
+                    <div className="deep-analysis karaka-analysis">
+                      <small>Natural karaka effect</small>
+                      <p>{jagannathaKarakaAnalysis[item.house]}</p>
                     </div>
                   )}
 
