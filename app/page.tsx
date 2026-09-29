@@ -71,6 +71,7 @@ export default function Home() {
   const [jagannathaInterpretations, setJagannathaInterpretations] = useState<Record<number, string>>({});
   const [jagannathaDeepAnalysis, setJagannathaDeepAnalysis] = useState<Record<number, string>>({});
   const [jagannathaKarakaAnalysis, setJagannathaKarakaAnalysis] = useState<Record<number, string>>({});
+  const [jagannathaCharaKarakaAnalysis, setJagannathaCharaKarakaAnalysis] = useState<Record<number, string>>({});
   const [jagannathaExamples, setJagannathaExamples] = useState<Record<number, string>>({});
   const [jagannathaAdvice, setJagannathaAdvice] = useState<Record<number, string>>({});
   const [jagannathaError, setJagannathaError] = useState("");
@@ -102,6 +103,7 @@ export default function Home() {
       setJagannathaInterpretations({});
       setJagannathaDeepAnalysis({});
       setJagannathaKarakaAnalysis({});
+      setJagannathaCharaKarakaAnalysis({});
       setJagannathaExamples({});
       setJagannathaAdvice({});
       setJagannathaError("");
@@ -139,6 +141,7 @@ export default function Home() {
       const next: Record<number, string> = {};
       const deep: Record<number, string> = {};
       const karaka: Record<number, string> = {};
+      const charaKaraka: Record<number, string> = {};
       const examples: Record<number, string> = {};
       const advice: Record<number, string> = {};
       for (const item of data.interpretations ?? []) {
@@ -151,6 +154,9 @@ export default function Home() {
         if (typeof item.house === "number" && typeof item.karakaAnalysis === "string") {
           karaka[item.house] = item.karakaAnalysis;
         }
+        if (typeof item.house === "number" && typeof item.charaKarakaAnalysis === "string") {
+          charaKaraka[item.house] = item.charaKarakaAnalysis;
+        }
         if (typeof item.house === "number" && typeof item.examples === "string") {
           examples[item.house] = item.examples;
         }
@@ -161,6 +167,7 @@ export default function Home() {
       setJagannathaInterpretations(next);
       setJagannathaDeepAnalysis(deep);
       setJagannathaKarakaAnalysis(karaka);
+      setJagannathaCharaKarakaAnalysis(charaKaraka);
       setJagannathaExamples(examples);
       setJagannathaAdvice(advice);
       setJagannathaValidated(Boolean(data.validation?.horoscopeReceived && data.validation?.gocharaReceived));
@@ -461,6 +468,13 @@ export default function Home() {
                     <div className="deep-analysis karaka-analysis">
                       <small>Natural karaka effect</small>
                       <p>{jagannathaKarakaAnalysis[item.house]}</p>
+                    </div>
+                  )}
+
+                  {jagannathaCharaKarakaAnalysis[item.house] && (
+                    <div className="deep-analysis karaka-analysis">
+                      <small>Chara Karaka effect</small>
+                      <p>{jagannathaCharaKarakaAnalysis[item.house]}</p>
                     </div>
                   )}
 
