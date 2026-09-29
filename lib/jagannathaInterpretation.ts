@@ -19,6 +19,11 @@ type HouseContext = {
   lifeArea: string;
 };
 
+type RuledHouse = {
+  house:number;
+  lifeArea:string;
+};
+
 type PlacementContext = {
   planet: Planet;
   sign: Sign;
@@ -137,7 +142,13 @@ function aspectConsequences(aspects?: string[]) {
   return effects.join("; ");
 }
 
-function deeperTransitAnalysis(house:HouseContext,natal:PlacementContext|undefined,transit:JHTransitPlanet|undefined) {
+function ruledHousePrediction(planet:Planet, ruled:RuledHouse, transitHouse?:number) {
+  const source=houseActivation[ruled.house] ?? ruled.lifeArea.toLowerCase();
+  const destination=transitHouse ? houseActivation[transitHouse] : "the house being transited";
+  return `As ruler of house ${ruled.house} (${ruled.lifeArea}), ${planet} carries matters of ${source} into ${destination}. This means events in the transit house can directly trigger developments in the ruled house, and developments in the ruled house can arrive through people, places, duties or circumstances belonging to the transit house.`;
+}
+
+function deeperTransitAnalysis(house:HouseContext,natal:PlacementContext|undefined,transit:JHTransitPlanet|undefined,ruledHouses:RuledHouse[]) {
   if (!transit) return "";
   const planet=house.lord;
   const effect=transitEffects[planet];
@@ -154,21 +165,24 @@ function deeperTransitAnalysis(house:HouseContext,natal:PlacementContext|undefin
       : `With a mixed condition, both sides are possible: ${effect.constructive}; but under pressure it can also show as ${effect.challenging}.`;
 
   const production=`In practical terms, ${planet} can produce ${effect.produces}. Because it is activating ${houseText}, those events are most likely to appear through that area of life.`;
-  const lordship=`Since ${planet} rules house ${house.house} for this chart, whatever happens during the transit also carries consequences back into ${house.lifeArea.toLowerCase()}.`;
+  const rulershipText=ruledHouses.length
+    ? ruledHouses.map(ruled=>ruledHousePrediction(planet,ruled,activatedHouse)).join(" ")
+    : `Since ${planet} rules house ${house.house} for this chart, whatever happens during the transit also carries consequences back into ${house.lifeArea.toLowerCase()}.`;
   const natalLink=natal ? `Natal ${planet} sits in house ${natal.house}, so the transit can also reopen or develop themes involving ${houseActivation[natal.house]}.` : "";
   const aspects=aspectConsequences(transit.aspectsToNatal);
   const aspectText=aspects ? `The aspect pattern makes the transit more specific: ${aspects}.` : "";
   const retro=transit.retrograde ? `Retrograde motion increases the likelihood of review, repetition, return, renegotiation or unfinished matters rather than a completely new development.` : "";
 
-  return [resultTone,production,lordship,natalLink,aspectText,retro].filter(Boolean).join(" ");
+  return [resultTone,production,rulershipText,natalLink,aspectText,retro].filter(Boolean).join(" ");
 }
 
 export function synthesizeHouseInterpretation(args:{
   house:HouseContext;
   natal?:PlacementContext;
   transit?:JHTransitPlanet;
+  ruledHouses?:RuledHouse[];
 }) {
-  const {house,natal,transit}=args;
+  const {house,natal,transit,ruledHouses=[]}=args;
   const baseline = natal
     ? `The ruler of this area, ${house.lord}, is natally placed in house ${natal.house}. This permanently links ${house.lifeArea.toLowerCase()} with ${houseActivation[natal.house]}.`
     : `${house.lord} governs this life area, so its natal condition sets the baseline.`;
@@ -201,7 +215,7 @@ export function synthesizeHouseInterpretation(args:{
   return {
     headline: `${house.lifeArea}: ${house.lord} activation`,
     interpretation:[baseline,natalCondition,transitCondition,concrete,retro,karaka].filter(Boolean).join(" "),
-    deepAnalysis:deeperTransitAnalysis(house,natal,transit),
+    deepAnalysis:deeperTransitAnalysis(house,natal,transit,ruledHouses),
     evidence:{
       natalHouse:natal?.house,
       natalSign:natal?.sign,
@@ -213,7 +227,8 @@ export function synthesizeHouseInterpretation(args:{
       transitNakshatra:transit?.nakshatra,
       transitDignity:transit?.dignity,
       retrograde:transit?.retrograde ?? false,
-      naturalMeaning:naturalMeanings[house.lord]
+      naturalMeaning:naturalMeanings[house.lord],
+      ruledHouses
     }
   };
 }
