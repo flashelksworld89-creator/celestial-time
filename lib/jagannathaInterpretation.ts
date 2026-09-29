@@ -103,12 +103,12 @@ const nakshatraMeaning: Record<string,NakMeaning> = {
 function signNakshatraModifier(transit:JHTransitPlanet|undefined) {
   if (!transit) return "";
   const sign=transit.sign as Sign | undefined;
-  const signText=sign && signMeaning[sign]
-    ? `In ${sign}, the transit operates through ${signMeaning[sign]}.`
-    : "";
   const nak=transit.nakshatra ? nakshatraMeaning[transit.nakshatra] : undefined;
+  const signText=sign && signMeaning[sign]
+    ? `The ${sign} placement makes the transit more ${signMeaning[sign]}.`
+    : "";
   const nakText=nak
-    ? `In ${transit.nakshatra}, ruled by ${nak.lord}, the event pattern emphasizes ${nak.meaning}. Its ${nak.nature} nature describes the way events tend to develop rather than changing which natal houses are activated.`
+    ? `${transit.nakshatra} adds a ${nak.nature} pattern, favoring ${nak.meaning}.`
     : "";
   return [signText,nakText].filter(Boolean).join(" ");
 }
@@ -307,10 +307,8 @@ function ordinal(n:number) {
 
 function ruledHousePrediction(planet:Planet, ruled:RuledHouse, transitHouse?:number) {
   const specific=relationshipSpecificOutcome(ruled.house,transitHouse);
-  if (!transitHouse) {
-    return `${planet} rules your ${ordinal(ruled.house)} house of ${ruled.lifeArea.toLowerCase()}, keeping this area central to the transit.`;
-  }
-  return `For your ${ordinal(ruled.house)} house of ${ruled.lifeArea.toLowerCase()}, this can show up as ${specific}.`;
+  if (!transitHouse) return "";
+  return `${specific}.`;
 }
 
 function rulershipTransitAnalysis(house:HouseContext,transit:JHTransitPlanet|undefined,ruledHouses:RuledHouse[]) {
@@ -318,11 +316,10 @@ function rulershipTransitAnalysis(house:HouseContext,transit:JHTransitPlanet|und
   const planet=house.lord;
   const activatedHouse=transit.house;
   const ruled=ruledHouses.length ? ruledHouses : [{house:house.house,lifeArea:house.lifeArea}];
-  const ruledText=ruled.map(item=>`${ordinal(item.house)} house of ${item.lifeArea.toLowerCase()}`).join(" and ");
-  const transitTheme=activatedHouse ? houseActivation[activatedHouse] : "the area occupied by the transit";
+  const ruledText=ruled.map(item=>item.lifeArea.toLowerCase()).join(" and ");
   const intro=activatedHouse
-    ? `${planet} is moving through your ${ordinal(activatedHouse)} house, activating your ${ruledText}. This can make ${transitTheme} directly affect those parts of your life.`
-    : `${planet} is activating your ${ruledText}.`;
+    ? `${planet} is moving through your ${ordinal(activatedHouse)} house, putting active pressure and movement into ${ruledText}.`
+    : `${planet} is actively affecting ${ruledText}.`;
   const pathways=ruled.map(item=>ruledHousePrediction(planet,item,activatedHouse)).join(" ");
   const signNakshatra=signNakshatraModifier(transit);
   const aspectModifier=transit.aspectsToNatal?.length
@@ -417,7 +414,7 @@ function naturalKarakaAnalysis(planet:Planet,transit:JHTransitPlanet|undefined,a
     : strained
       ? `${conditionLabel} and ${motionLabel}. This places more pressure on its karaka themes, making ${effect.challenging} more likely.`
       : `${conditionLabel} and ${motionLabel}. This gives a mixed expression: ${effect.constructive}; under pressure, ${effect.challenging}.`;
-  const manifestation=`As a natural karaka in classical Jyotish, ${planet} signifies ${classicalKarakaMeanings[planet]}. While transiting ${transitArea}, these significations can become active through ${effect.produces}.`;
+  const manifestation=`${planet} is currently pushing its natural themes into this part of the chart, making ${effect.produces} more noticeable for the native.`;
   const aspects=aspectConsequences(transit.aspectsToNatal,allHouses,allNatal);
   const aspectText=aspects ? `Its current aspect pattern further modifies the karaka expression: ${aspects}.` : "";
   const retro=transit.retrograde
@@ -437,8 +434,8 @@ export function synthesizeHouseInterpretation(args:{
 }) {
   const {house,natal,transit,ruledHouses=[],allHouses=[],allNatal=[]}=args;
   const baseline = natal
-    ? `The ruler of this area, ${house.lord}, is natally placed in house ${natal.house}. This permanently links ${house.lifeArea.toLowerCase()} with ${houseActivation[natal.house]}.`
-    : `${house.lord} governs this life area, so its natal condition sets the baseline.`;
+    ? `${house.lord} is the planet carrying this area of life, and its natal placement in house ${natal.house} shows where its effects are rooted.`
+    : `${house.lord} is the planet carrying this area of life.`;
 
   const natalCondition = natal
     ? [
@@ -453,8 +450,8 @@ export function synthesizeHouseInterpretation(args:{
     ? `Right now ${house.lord} is moving through ${transit.sign ?? "its current sign"}${transit.house ? ` in house ${transit.house}` : ""}${typeof transit.degree==="number" ? ` at ${transit.degree.toFixed(1)}°` : ""}${transit.nakshatra ? `, in ${transit.nakshatra}${transit.pada ? ` pada ${transit.pada}` : ""}` : ""}. ${conditionPhrase(transit.dignity)}`
     : `Current Jagannatha Hora transit data for ${house.lord} was not available, so no transit claim is made for this area.`;
 
-  const concrete = natal
-    ? `Likely expression: matters involving ${house.lifeArea.toLowerCase()} are most likely to surface through ${houseActivation[natal.house]}. Watch for concrete developments there rather than treating the transit as a general mood.`
+  const concrete = transit
+    ? `The practical effect is most likely to show through current events, decisions, responsibilities or encounters connected with this transit rather than as a vague background influence.`
     : "";
 
   const retro = transit?.retrograde
@@ -467,7 +464,7 @@ export function synthesizeHouseInterpretation(args:{
 
   return {
     headline: `${house.lifeArea}: ${house.lord} activation`,
-    interpretation:[baseline,natalCondition,transitCondition,concrete,retro,karaka].filter(Boolean).join(" "),
+    interpretation:[baseline,transitCondition,concrete,retro,karaka].filter(Boolean).join(" "),
     deepAnalysis:rulershipTransitAnalysis(house,transit,ruledHouses),
     karakaAnalysis:naturalKarakaAnalysis(house.lord,transit,allHouses,allNatal),
     charaKarakaAnalysis:charaKarakaAnalysis(house.lord,natal?.charaKaraka,transit,ruledHouses),
