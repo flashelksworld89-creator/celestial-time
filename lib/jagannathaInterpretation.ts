@@ -280,7 +280,8 @@ export function synthesizeHouseInterpretation(args:{
   return {
     headline: `${house.lifeArea}: ${house.lord} activation`,
     interpretation:[baseline,natalCondition,transitCondition,concrete,retro,karaka].filter(Boolean).join(" "),
-    deepAnalysis:rulershipTransitAnalysis(house,transit,ruledHouses),\n    karakaAnalysis:naturalKarakaAnalysis(house.lord,transit),
+    deepAnalysis:rulershipTransitAnalysis(house,transit,ruledHouses),
+    karakaAnalysis:naturalKarakaAnalysis(house.lord,transit),
     evidence:{
       natalHouse:natal?.house,
       natalSign:natal?.sign,
