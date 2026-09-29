@@ -202,32 +202,43 @@ function ruledHousePrediction(planet:Planet, ruled:RuledHouse, transitHouse?:num
   return `As ruler of house ${ruled.house} (${ruled.lifeArea}), ${planet} carries matters of ${source} into ${destination}. ${specific}`;
 }
 
-function deeperTransitAnalysis(house:HouseContext,natal:PlacementContext|undefined,transit:JHTransitPlanet|undefined,ruledHouses:RuledHouse[]) {
+function rulershipTransitAnalysis(house:HouseContext,transit:JHTransitPlanet|undefined,ruledHouses:RuledHouse[]) {
   if (!transit) return "";
   const planet=house.lord;
-  const effect=transitEffects[planet];
   const activatedHouse=transit.house;
-  const houseText=activatedHouse ? houseActivation[activatedHouse] : "the life area occupied by the transit";
+  const ruled=ruledHouses.length ? ruledHouses : [{house:house.house,lifeArea:house.lifeArea}];
+  const intro=activatedHouse
+    ? `${planet} is transiting house ${activatedHouse}. This prediction is limited to the natal houses ${planet} rules.`
+    : `${planet}'s transit is interpreted only through the natal houses it rules.`;
+  const pathways=ruled.map(item=>ruledHousePrediction(planet,item,activatedHouse)).join(" ");
+  const aspectModifier=transit.aspectsToNatal?.length
+    ? `Current aspects can intensify or redirect these results, but the affected subjects remain ${ruled.map(item=>`house ${item.house} (${item.lifeArea})`).join(" and ")}.`
+    : "";
+  const retro=transit.retrograde
+    ? `Because ${planet} is retrograde, these ruled-house matters are more likely to involve review, return, repetition, renegotiation, correction or unfinished business.`
+    : "";
+  return [intro,pathways,aspectModifier,retro].filter(Boolean).join(" ");
+}
+
+function naturalKarakaAnalysis(planet:Planet,transit:JHTransitPlanet|undefined) {
+  if (!transit) return "";
+  const effect=transitEffects[planet];
+  const transitArea=transit.house ? houseActivation[transit.house] : "the house currently occupied";
   const dignity=transit.dignity?.toLowerCase() ?? "";
   const strained=["enemy","enemy sign","debilitated","debilitation"].includes(dignity);
   const supported=["exalted","exaltation","moolatrikona","own","own sign","friendly","friend sign"].includes(dignity);
-
-  const resultTone=supported
-    ? `Because the transit is relatively supported, the constructive side is easier to express: ${effect.constructive}.`
+  const condition=supported
+    ? `Its condition favors the constructive expression of its karaka themes: ${effect.constructive}.`
     : strained
-      ? `Because the transit is under strain, the difficult side becomes more likely to require management: ${effect.challenging}.`
-      : `With a mixed condition, both sides are possible: ${effect.constructive}; but under pressure it can also show as ${effect.challenging}.`;
-
-  const production=`In practical terms, ${planet} can produce ${effect.produces}. Because it is activating ${houseText}, those events are most likely to appear through that area of life.`;
-  const rulershipText=ruledHouses.length
-    ? ruledHouses.map(ruled=>ruledHousePrediction(planet,ruled,activatedHouse)).join(" ")
-    : `Since ${planet} rules house ${house.house} for this chart, whatever happens during the transit also carries consequences back into ${house.lifeArea.toLowerCase()}.`;
-  const natalLink=natal ? `Natal ${planet} sits in house ${natal.house}, so the transit can also reopen or develop themes involving ${houseActivation[natal.house]}.` : "";
+      ? `Its condition puts more pressure on its karaka themes, so ${effect.challenging} may be more noticeable.`
+      : `Its karaka themes can work in both directions: ${effect.constructive}, while pressure can produce ${effect.challenging}.`;
+  const manifestation=`As a natural karaka, ${planet} signifies ${naturalMeanings[planet]}. While transiting ${transitArea}, it can produce ${effect.produces} through that area of life.`;
   const aspects=aspectConsequences(transit.aspectsToNatal);
-  const aspectText=aspects ? `The aspect pattern makes the transit more specific: ${aspects}.` : "";
-  const retro=transit.retrograde ? `Retrograde motion increases the likelihood of review, repetition, return, renegotiation or unfinished matters rather than a completely new development.` : "";
-
-  return [resultTone,production,rulershipText,natalLink,aspectText,retro].filter(Boolean).join(" ");
+  const aspectText=aspects ? `Its current aspect pattern further modifies the karaka expression: ${aspects}.` : "";
+  const retro=transit.retrograde
+    ? `Retrograde motion can turn the karaka themes toward revision, reconnection, reconsideration or the return of earlier situations.`
+    : "";
+  return [manifestation,condition,aspectText,retro].filter(Boolean).join(" ");
 }
 
 export function synthesizeHouseInterpretation(args:{
@@ -269,7 +280,7 @@ export function synthesizeHouseInterpretation(args:{
   return {
     headline: `${house.lifeArea}: ${house.lord} activation`,
     interpretation:[baseline,natalCondition,transitCondition,concrete,retro,karaka].filter(Boolean).join(" "),
-    deepAnalysis:deeperTransitAnalysis(house,natal,transit,ruledHouses),
+    deepAnalysis:rulershipTransitAnalysis(house,transit,ruledHouses),\n    karakaAnalysis:naturalKarakaAnalysis(house.lord,transit),
     evidence:{
       natalHouse:natal?.house,
       natalSign:natal?.sign,
