@@ -31,3 +31,7 @@
 .jagannatha-status{margin-top:14px;padding:10px 12px;border:1px solid #315d45;border-radius:10px;background:#102019;color:#b8e4c9;font-size:.82rem}
 .jagannatha-error{margin-top:14px;padding:12px 14px;border:1px solid #6b3030;border-radius:10px;background:#241213;color:var(--danger);font-size:.86rem}
 @media(max-width:760px){.jagannatha-heading{display:grid;align-items:start}.jagannatha-heading .primary{width:100%}}
+
+.deep-analysis{margin:16px 0;padding:15px 16px;border:1px solid #5a4f2b;border-radius:14px;background:linear-gradient(145deg,#18160f,#10131c)}
+.deep-analysis small{display:block;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;font-size:.69rem;margin-bottom:7px}
+.deep-analysis p{margin:0;line-height:1.68;color:#ece7da;font-size:.9rem}
