@@ -37,6 +37,7 @@ type Body = {
   place?:string;
   houses:House[];
   natal:NatalPlacement[];
+  transit?: Array<{ planet:string; sign:string; degree:number; house:number; nakshatra:string; pada:number; retrograde:boolean; aspectsToNatal?:string[] }>;
 };
 
 function offsetHours(date:string,time:string,zone:string) {
@@ -145,7 +146,15 @@ export async function POST(req:NextRequest) {
       })
     ]);
 
-    const transitPlanets=normalizeTransitPlanets(gochara);
+    const transitPlanets=normalizeTransitPlanets(gochara).map(planet=>{
+      const matchingHouse=(body.houses ?? []).find(h=>h.sign===planet.sign);
+      const localTransit=(body.transit ?? []).find(p=>p.planet===planet.planet);
+      return {
+        ...planet,
+        house:matchingHouse?.house ?? localTransit?.house,
+        aspectsToNatal:localTransit?.aspectsToNatal ?? []
+      };
+    });
     const interpretations=(body.houses ?? []).map(house=>{
       const natal=(body.natal ?? []).find(p=>p.planet===house.lord);
       const transit=transitPlanets.find(p=>p.planet===house.lord);
