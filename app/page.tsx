@@ -68,9 +68,10 @@ export default function Home() {
   const [feedback, setFeedback] = useState<Record<string, Feedback>>({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [vedikaText, setVedikaText] = useState("");
-  const [vedikaError, setVedikaError] = useState("");
-  const [vedikaLoading, setVedikaLoading] = useState(false);
+  const [jagannathaInterpretations, setJagannathaInterpretations] = useState<Record<number, string>>({});
+  const [jagannathaError, setJagannathaError] = useState("");
+  const [jagannathaLoading, setJagannathaLoading] = useState(false);
+  const [jagannathaValidated, setJagannathaValidated] = useState(false);
 
   const atmakaraka = useMemo(
     () => chart?.natal.find((p) => p.charaKaraka === "Atmakaraka"),
@@ -94,8 +95,9 @@ export default function Home() {
       if (!response.ok) throw new Error(data.error || "Chart calculation failed.");
       setChart(data);
       setFeedback({});
-      setVedikaText("");
-      setVedikaError("");
+      setJagannathaInterpretations({});
+      setJagannathaError("");
+      setJagannathaValidated(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Chart calculation failed.");
     } finally {
@@ -103,30 +105,40 @@ export default function Home() {
     }
   }
 
-  async function generateVedikaInterpretation() {
+  async function generateJagannathaInterpretations() {
     if (!chart) return;
-    setVedikaLoading(true);
-    setVedikaError("");
-    setVedikaText("");
+    setJagannathaLoading(true);
+    setJagannathaError("");
     try {
-      const response = await fetch("/api/vedika", {
+      const response = await fetch("/api/jagannatha", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           date: form.date,
           time: form.time,
+          timeZone: chart.location.timeZone,
           latitude: chart.location.latitude,
           longitude: chart.location.longitude,
-          timeZone: chart.location.timeZone,
+          place: chart.location.name,
+          houses: chart.houses,
+          natal: chart.natal,
         }),
       });
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Vedika interpretation failed.");
-      setVedikaText(data.answer);
+      if (!response.ok) throw new Error(data.error || "Jagannatha Hora interpretation failed.");
+
+      const next: Record<number, string> = {};
+      for (const item of data.interpretations ?? []) {
+        if (typeof item.house === "number" && typeof item.interpretation === "string") {
+          next[item.house] = item.interpretation;
+        }
+      }
+      setJagannathaInterpretations(next);
+      setJagannathaValidated(Boolean(data.validation?.horoscopeReceived && data.validation?.gocharaReceived));
     } catch (err) {
-      setVedikaError(err instanceof Error ? err.message : "Vedika interpretation failed.");
+      setJagannathaError(err instanceof Error ? err.message : "Jagannatha Hora interpretation failed.");
     } finally {
-      setVedikaLoading(false);
+      setJagannathaLoading(false);
     }
   }
 
@@ -300,27 +312,31 @@ export default function Home() {
             natal={chart.natal}
           />
 
-          <section className="panel vedika-panel">
-            <div className="vedika-heading">
+          <section className="panel jagannatha-panel">
+            <div className="jagannatha-heading">
               <div>
-                <span className="house">VEDIKA TRANSIT INTERPRETER</span>
-                <h2>Current Transit Interpretation</h2>
+                <span className="house">JAGANNATHA HORA + CELESTIAL TIME</span>
+                <h2>Interpretive Transit Engine</h2>
               </div>
               <button
                 type="button"
                 className="primary"
-                onClick={generateVedikaInterpretation}
-                disabled={vedikaLoading}
+                onClick={generateJagannathaInterpretations}
+                disabled={jagannathaLoading}
               >
-                {vedikaLoading ? "Interpreting…" : "Generate Vedika Interpretation"}
+                {jagannathaLoading ? "Analyzing transits…" : "Generate Deeper Interpretations"}
               </button>
             </div>
-            <p className="vedika-note">
-              Uses Vedika only for interpretive synthesis. Celestial Time keeps its own natal chart
-              and transit calculations visible for comparison. Dashas are intentionally excluded for now.
+            <p className="jagannatha-note">
+              Jagannatha Hora supplies the Vedic horoscope and current gochara calculations.
+              Celestial Time performs the interpretation itself, combining house lordship,
+              natal placement, dignity, dispositors, aspects, nakshatra and current transit.
+              Dashas remain excluded for now.
             </p>
-            {vedikaError && <div className="vedika-error">{vedikaError}</div>}
-            {vedikaText && <div className="vedika-output">{vedikaText}</div>}
+            {jagannathaValidated && (
+              <div className="jagannatha-status">Horoscope and gochara data received successfully.</div>
+            )}
+            {jagannathaError && <div className="jagannatha-error">{jagannathaError}</div>}
           </section>
 
           <section className="planet-strip panel">
@@ -344,12 +360,13 @@ export default function Home() {
             {chart.houses.map((item) => {
               const natal = chart.natal.find((p) => p.planet === item.lord);
               const transit = chart.transit.find((p) => p.planet === item.lord);
-              const text = interpretationFor({
+              const fallbackText = interpretationFor({
                 ...item,
                 natal,
                 transit,
                 karaka: natal?.charaKaraka,
               });
+              const text = jagannathaInterpretations[item.house] || fallbackText;
               const key = `house-${item.house}`;
 
               return (
