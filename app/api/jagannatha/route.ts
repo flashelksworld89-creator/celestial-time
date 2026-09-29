@@ -177,7 +177,8 @@ export async function POST(req:NextRequest) {
           transit,
           ruledHouses,
           allHouses:body.houses as any,
-          allNatal:body.natal as any
+          allNatal:body.natal as any,
+          allTransits:transitPlanets
         })
       };
     });
