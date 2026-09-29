@@ -158,6 +158,9 @@ export async function POST(req:NextRequest) {
     const interpretations=(body.houses ?? []).map(house=>{
       const natal=(body.natal ?? []).find(p=>p.planet===house.lord);
       const transit=transitPlanets.find(p=>p.planet===house.lord);
+      const ruledHouses=(body.houses ?? [])
+        .filter(candidate=>candidate.lord===house.lord)
+        .map(candidate=>({house:candidate.house,lifeArea:candidate.lifeArea}));
       return {
         house:house.house,
         lifeArea:house.lifeArea,
@@ -165,7 +168,8 @@ export async function POST(req:NextRequest) {
         ...synthesizeHouseInterpretation({
           house:house as any,
           natal:natal as any,
-          transit
+          transit,
+          ruledHouses
         })
       };
     });
