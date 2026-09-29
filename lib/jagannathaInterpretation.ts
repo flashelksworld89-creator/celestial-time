@@ -179,6 +179,28 @@ const classicalKarakaMeanings: Record<Planet,string> = {
   Ketu:"detachment, separation, release, moksha, intuition, research, isolation, renunciation, breaks, loss of identification and specialized knowledge"
 };
 
+const planetBodyCorrespondence: Record<Planet,string> = {
+  Sun:"heart, spine, bones, vitality, right eye and the body’s central life-force",
+  Moon:"mind-body rhythms, bodily fluids, breasts and chest, stomach, left eye, sleep and nourishment",
+  Mars:"blood, muscles, bone marrow, heat, inflammation, cuts, burns, surgery and physical exertion",
+  Mercury:"nervous system, skin, hands and arms, tongue, speech apparatus, lungs and sensory coordination",
+  Jupiter:"liver, fat tissue, growth, hips and thighs, metabolic nourishment and reproductive growth",
+  Venus:"kidneys, reproductive organs, urinary system, face, hormonal functions and sexual vitality",
+  Saturn:"bones, joints, knees, teeth, nerves, legs, chronic strain, aging and connective structures",
+  Rahu:"toxins, unusual or difficult-to-classify disturbances, nervous agitation, compulsive patterns and foreign substances",
+  Ketu:"numbness, scars, severance, intermittent or subtle disturbances, wasting patterns and neurological sensitivity"
+};
+
+function bodyHealthAnalysis(planet:Planet, house:HouseContext, transit:JHTransitPlanet|undefined, ruledHouses:RuledHouse[]) {
+  const relevantHouses=new Set([1,6,8,12]);
+  const ruledRelevant=ruledHouses.filter(h=>relevantHouses.has(h.house));
+  const directlyRelevant=relevantHouses.has(house.house) || ruledRelevant.length>0 || (transit?.house ? relevantHouses.has(transit.house) : false);
+  if (!directlyRelevant) return "";
+  const ruledText=ruledRelevant.length ? ` Because ${planet} rules ${ruledRelevant.map(h=>`${ordinal(h.house)} house`).join(" and ")}, those body or health-related houses are directly involved.` : "";
+  const transitText=transit?.house ? ` Its transit through the ${ordinal(transit.house)} house shows where these themes are being activated now.` : "";
+  return `Body & health correspondence: in traditional Jyotish, ${planet} is associated with ${planetBodyCorrespondence[planet]}.${ruledText}${transitText} These correspondences describe astrological symbolism and should not be treated as a medical diagnosis.`;
+};
+
 const transitEffects: Record<Planet,{constructive:string;challenging:string;produces:string}> = {
   Sun:{
     constructive:"greater visibility, leadership, decisiveness, contact with authority and a need to define priorities",
@@ -441,6 +463,7 @@ export function synthesizeHouseInterpretation(args:{
     deepAnalysis:rulershipTransitAnalysis(house,transit,ruledHouses),
     karakaAnalysis:naturalKarakaAnalysis(house.lord,transit),
     charaKarakaAnalysis:charaKarakaAnalysis(house.lord,natal?.charaKaraka,transit,ruledHouses),
+    bodyHealthAnalysis:bodyHealthAnalysis(house.lord,house,transit,ruledHouses),
     examples:personalizedExamples(house.lord,transit,ruledHouses),
     advice:personalizedAdvice(house.lord,transit,ruledHouses),
     evidence:{
