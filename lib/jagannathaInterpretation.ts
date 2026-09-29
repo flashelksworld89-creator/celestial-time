@@ -275,17 +275,23 @@ function joinNatural(items?: Planet[]) {
   return items.join(", ");
 }
 
-function aspectConsequences(aspects?: string[]) {
+function aspectConsequences(aspects:string[]|undefined, allHouses:HouseContext[] = [], allNatal:PlacementContext[] = []) {
   if (!aspects?.length) return "";
   const effects=aspects.map(aspect=>{
     const match=aspect.match(/natal\s+(Sun|Moon|Mars|Mercury|Jupiter|Venus|Saturn|Rahu|Ketu)/i);
     const target=match?.[1] as Planet | undefined;
     if (!target) return aspect;
-    const meaning=naturalMeanings[target];
+    const meaning=classicalKarakaMeanings[target] ?? naturalMeanings[target];
+    const targetHouses=allHouses.filter(h=>h.lord===target);
+    const targetPlacement=allNatal.find(p=>p.planet===target);
+    const ruledText=targetHouses.length
+      ? ` ${target} actually rules ${targetHouses.map(h=>`${ordinal(h.house)} house (${h.lifeArea})`).join(" and ")} in this natal chart.`
+      : "";
+    const conditionText=targetPlacement?.dignity ? ` Natal ${target} is ${targetPlacement.dignity}.` : "";
     if (/conjunct/i.test(aspect)) {
-      return `conjunction with natal ${target} directly merges the transit with natal themes of ${meaning}`;
+      return `conjunction with natal ${target} directly merges the transit with ${meaning}.${ruledText}${conditionText}`;
     }
-    return `aspect to natal ${target} activates natal themes of ${meaning}`;
+    return `aspect to natal ${target} activates ${meaning}.${ruledText}${conditionText}`;
   });
   return effects.join("; ");
 }
@@ -397,7 +403,7 @@ function personalizedAdvice(planet:Planet, transit:JHTransitPlanet|undefined, ru
   return `Advice: ${[conditionAdvice,retroAdvice,signAdvice,nakAdvice].filter(Boolean).join(" ")}`;
 }
 
-function naturalKarakaAnalysis(planet:Planet,transit:JHTransitPlanet|undefined) {
+function naturalKarakaAnalysis(planet:Planet,transit:JHTransitPlanet|undefined,allHouses:HouseContext[] = [],allNatal:PlacementContext[] = []) {
   if (!transit) return "";
   const effect=transitEffects[planet];
   const transitArea=transit.house ? houseActivation[transit.house] : "the house currently occupied";
@@ -412,7 +418,7 @@ function naturalKarakaAnalysis(planet:Planet,transit:JHTransitPlanet|undefined) 
       ? `${conditionLabel} and ${motionLabel}. This places more pressure on its karaka themes, making ${effect.challenging} more likely.`
       : `${conditionLabel} and ${motionLabel}. This gives a mixed expression: ${effect.constructive}; under pressure, ${effect.challenging}.`;
   const manifestation=`As a natural karaka in classical Jyotish, ${planet} signifies ${classicalKarakaMeanings[planet]}. While transiting ${transitArea}, these significations can become active through ${effect.produces}.`;
-  const aspects=aspectConsequences(transit.aspectsToNatal);
+  const aspects=aspectConsequences(transit.aspectsToNatal,allHouses,allNatal);
   const aspectText=aspects ? `Its current aspect pattern further modifies the karaka expression: ${aspects}.` : "";
   const retro=transit.retrograde
     ? `Retrograde motion can turn the karaka themes toward revision, reconnection, reconsideration or the return of earlier situations.`
@@ -426,8 +432,10 @@ export function synthesizeHouseInterpretation(args:{
   natal?:PlacementContext;
   transit?:JHTransitPlanet;
   ruledHouses?:RuledHouse[];
+  allHouses?:HouseContext[];
+  allNatal?:PlacementContext[];
 }) {
-  const {house,natal,transit,ruledHouses=[]}=args;
+  const {house,natal,transit,ruledHouses=[],allHouses=[],allNatal=[]}=args;
   const baseline = natal
     ? `The ruler of this area, ${house.lord}, is natally placed in house ${natal.house}. This permanently links ${house.lifeArea.toLowerCase()} with ${houseActivation[natal.house]}.`
     : `${house.lord} governs this life area, so its natal condition sets the baseline.`;
@@ -461,7 +469,7 @@ export function synthesizeHouseInterpretation(args:{
     headline: `${house.lifeArea}: ${house.lord} activation`,
     interpretation:[baseline,natalCondition,transitCondition,concrete,retro,karaka].filter(Boolean).join(" "),
     deepAnalysis:rulershipTransitAnalysis(house,transit,ruledHouses),
-    karakaAnalysis:naturalKarakaAnalysis(house.lord,transit),
+    karakaAnalysis:naturalKarakaAnalysis(house.lord,transit,allHouses,allNatal),
     charaKarakaAnalysis:charaKarakaAnalysis(house.lord,natal?.charaKaraka,transit,ruledHouses),
     bodyHealthAnalysis:bodyHealthAnalysis(house.lord,house,transit,ruledHouses),
     examples:personalizedExamples(house.lord,transit,ruledHouses),
