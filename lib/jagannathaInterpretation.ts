@@ -1,4 +1,4 @@
-import { Dignity, Planet, Sign, naturalMeanings } from "./astrology";
+import { Dignity, Planet, Sign, naturalMeanings, signLords } from "./astrology";
 
 export type JHTransitPlanet = {
   planet: string;
@@ -381,6 +381,53 @@ const charaKarakaMeaning: Record<string,string> = {
   Darakaraka:"spouse, committed partners, significant one-to-one relationships, agreements and the experience of relating closely to others"
 };
 
+function dispositorChainAnalysis(
+  planet:Planet,
+  role:string|undefined,
+  transit:JHTransitPlanet|undefined,
+  allHouses:HouseContext[] = [],
+  allNatal:PlacementContext[] = [],
+  allTransits:JHTransitPlanet[] = []
+) {
+  if (!role || !transit?.sign) return "";
+  const firstDispositor=signLords[transit.sign as Sign];
+  if (!firstDispositor || firstDispositor===planet) return "";
+
+  const visited=new Set<Planet>([planet]);
+  const chain:Planet[]=[];
+  let current:Planet|undefined=firstDispositor;
+
+  while (current && !visited.has(current) && chain.length<5) {
+    chain.push(current);
+    visited.add(current);
+    const natalPlacement=allNatal.find(p=>p.planet===current);
+    if (!natalPlacement?.sign) break;
+    const next=signLords[natalPlacement.sign];
+    if (!next || next===current || visited.has(next)) break;
+    current=next;
+  }
+
+  const primary=chain[0];
+  if (!primary) return "";
+  const primaryNatal=allNatal.find(p=>p.planet===primary);
+  const primaryTransit=allTransits.find(p=>p.planet===primary);
+  const ruled=allHouses.filter(h=>h.lord===primary);
+  const ruledText=ruled.length
+    ? ruled.map(h=>h.lifeArea.toLowerCase()).join(" and ")
+    : "the areas it governs in the natal chart";
+  const natalPlacementText=primaryNatal
+    ? `Natally, ${primary} is placed in the ${ordinal(primaryNatal.house)} house${primaryNatal.dignity ? ` and is ${primaryNatal.dignity}` : ""}, so the Chara Karaka transit is being routed through ${ruledText} from that natal position.`
+    : `${primary} routes this Chara Karaka transit through ${ruledText}.`;
+  const currentCondition=primaryTransit
+    ? `Currently, ${primary} is transiting the ${primaryTransit.house ? ordinal(primaryTransit.house) + " house" : "chart"}${primaryTransit.sign ? ` in ${primaryTransit.sign}` : ""}${primaryTransit.dignity ? ` with ${primaryTransit.dignity} dignity` : ""}${primaryTransit.retrograde ? " while retrograde" : ""}, which modifies how easily these results can develop.`
+    : "";
+  const chainText=chain.length>1
+    ? `The dispositor chain continues through ${chain.slice(1).join(" → ")}, adding those planets as secondary controllers of the transit.`
+    : "";
+
+  return `${planet}'s current transit is disposed by ${primary}. ${natalPlacementText} ${currentCondition} ${chainText}`.replace(/\s+/g," ").trim();
+}
+
 function charaKarakaAnalysis(planet:Planet, role:string|undefined, transit:JHTransitPlanet|undefined, ruledHouses:RuledHouse[]) {
   if (!role || !transit) return "";
   const meaning=charaKarakaMeaning[role];
@@ -470,8 +517,9 @@ export function synthesizeHouseInterpretation(args:{
   ruledHouses?:RuledHouse[];
   allHouses?:HouseContext[];
   allNatal?:PlacementContext[];
+  allTransits?:JHTransitPlanet[];
 }) {
-  const {house,natal,transit,ruledHouses=[],allHouses=[],allNatal=[]}=args;
+  const {house,natal,transit,ruledHouses=[],allHouses=[],allNatal=[],allTransits=[]}=args;
   const baseline = natal
     ? `${house.lord} is the planet carrying this area of life, and its natal placement in house ${natal.house} shows where its effects are rooted.`
     : `${house.lord} is the planet carrying this area of life.`;
@@ -508,6 +556,7 @@ export function synthesizeHouseInterpretation(args:{
     topicInterpretations:topicInterpretations(house.lord,transit,ruledHouses),
     karakaAnalysis:naturalKarakaAnalysis(house.lord,transit,allHouses,allNatal),
     charaKarakaAnalysis:charaKarakaAnalysis(house.lord,natal?.charaKaraka,transit,ruledHouses),
+    charaKarakaDispositorAnalysis:dispositorChainAnalysis(house.lord,natal?.charaKaraka,transit,allHouses,allNatal,allTransits),
     bodyHealthAnalysis:bodyHealthAnalysis(house.lord,house,transit,ruledHouses),
     examples:personalizedExamples(house.lord,transit,ruledHouses),
     advice:personalizedAdvice(house.lord,transit,ruledHouses),
