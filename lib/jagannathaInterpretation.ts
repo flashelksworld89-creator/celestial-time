@@ -167,6 +167,18 @@ function relationshipSpecificOutcome(ruledHouse:number, transitHouse?:number) {
   return `${source} can produce concrete events such as ${examples.join(", ")} because those ruled-house topics are being expressed through house ${transitHouse}.`;
 }
 
+const classicalKarakaMeanings: Record<Planet,string> = {
+  Sun:"atma, vitality, authority, father, leadership, government, status, reputation, honor, vision, bones and central life-purpose",
+  Moon:"mind, emotions, mother, care, nourishment, public, home, fluids, sleep, memory, receptivity and daily rhythms",
+  Mars:"courage, action, conflict, energy, competition, brothers, land, property disputes, technical skill, weapons, surgery and physical exertion",
+  Mercury:"intellect, speech, communication, writing, calculation, learning, trade, commerce, accounting, documents, negotiation, analysis, coordination and younger people",
+  Jupiter:"wisdom, dharma, teachers, gurus, children, education, judgment, adversary, finance, expansion, prosperity, law, faith and protection",
+  Venus:"relationships, marriage, attraction, agreement, comforts, vehicles, luxury, art, music, beauty, sensual pleasure, values and financial enjoyment",
+  Saturn:"discipline, delay, labor, responsibility, endurance, age, older people, service, scarcity, structure, conservation, separation, longevity and the consequences of time",
+  Rahu:"amplification, appetite, ambition, foreign influences, technology, mass communication, obsession, status hunger, unconventional choices, controversy and disruption",
+  Ketu:"detachment, separation, release, moksha, intuition, research, isolation, renunciation, breaks, loss of identification and specialized knowledge"
+};
+
 const transitEffects: Record<Planet,{constructive:string;challenging:string;produces:string}> = {
   Sun:{
     constructive:"greater visibility, leadership, decisiveness, contact with authority and a need to define priorities",
@@ -352,7 +364,7 @@ function naturalKarakaAnalysis(planet:Planet,transit:JHTransitPlanet|undefined) 
     : strained
       ? `${conditionLabel} and ${motionLabel}. This places more pressure on its karaka themes, making ${effect.challenging} more likely.`
       : `${conditionLabel} and ${motionLabel}. This gives a mixed expression: ${effect.constructive}; under pressure, ${effect.challenging}.`;
-  const manifestation=`As a natural karaka, ${planet} signifies ${naturalMeanings[planet]}. While transiting ${transitArea}, it can produce ${effect.produces} through that area of life.`;
+  const manifestation=`As a natural karaka in classical Jyotish, ${planet} signifies ${classicalKarakaMeanings[planet]}. While transiting ${transitArea}, these significations can become active through ${effect.produces}.`;
   const aspects=aspectConsequences(transit.aspectsToNatal);
   const aspectText=aspects ? `Its current aspect pattern further modifies the karaka expression: ${aspects}.` : "";
   const retro=transit.retrograde
@@ -416,7 +428,7 @@ export function synthesizeHouseInterpretation(args:{
       transitNakshatra:transit?.nakshatra,
       transitDignity:transit?.dignity,
       retrograde:transit?.retrograde ?? false,
-      naturalMeaning:naturalMeanings[house.lord],
+      naturalMeaning:classicalKarakaMeanings[house.lord],
       ruledHouses
     }
   };
