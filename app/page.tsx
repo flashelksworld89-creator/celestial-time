@@ -69,6 +69,7 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [jagannathaInterpretations, setJagannathaInterpretations] = useState<Record<number, string>>({});
+  const [jagannathaDeepAnalysis, setJagannathaDeepAnalysis] = useState<Record<number, string>>({});
   const [jagannathaError, setJagannathaError] = useState("");
   const [jagannathaLoading, setJagannathaLoading] = useState(false);
   const [jagannathaValidated, setJagannathaValidated] = useState(false);
@@ -96,6 +97,7 @@ export default function Home() {
       setChart(data);
       setFeedback({});
       setJagannathaInterpretations({});
+      setJagannathaDeepAnalysis({});
       setJagannathaError("");
       setJagannathaValidated(false);
     } catch (err) {
@@ -122,18 +124,24 @@ export default function Home() {
           place: chart.location.name,
           houses: chart.houses,
           natal: chart.natal,
+          transit: chart.transit,
         }),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Jagannatha Hora interpretation failed.");
 
       const next: Record<number, string> = {};
+      const deep: Record<number, string> = {};
       for (const item of data.interpretations ?? []) {
         if (typeof item.house === "number" && typeof item.interpretation === "string") {
           next[item.house] = item.interpretation;
         }
+        if (typeof item.house === "number" && typeof item.deepAnalysis === "string") {
+          deep[item.house] = item.deepAnalysis;
+        }
       }
       setJagannathaInterpretations(next);
+      setJagannathaDeepAnalysis(deep);
       setJagannathaValidated(Boolean(data.validation?.horoscopeReceived && data.validation?.gocharaReceived));
     } catch (err) {
       setJagannathaError(err instanceof Error ? err.message : "Jagannatha Hora interpretation failed.");
@@ -418,6 +426,13 @@ export default function Home() {
                     <div className="aspects">
                       <small>Current connections</small>
                       <p>{transit.aspectsToNatal.join(" · ")}</p>
+                    </div>
+                  )}
+
+                  {jagannathaDeepAnalysis[item.house] && (
+                    <div className="deep-analysis">
+                      <small>What this transit can produce</small>
+                      <p>{jagannathaDeepAnalysis[item.house]}</p>
                     </div>
                   )}
 
