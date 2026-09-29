@@ -151,7 +151,13 @@ export async function POST(req:NextRequest) {
       const localTransit=(body.transit ?? []).find(p=>p.planet===planet.planet);
       return {
         ...planet,
+        sign:planet.sign ?? localTransit?.sign,
+        degree:planet.degree ?? localTransit?.degree,
         house:matchingHouse?.house ?? localTransit?.house,
+        nakshatra:planet.nakshatra ?? localTransit?.nakshatra,
+        pada:planet.pada ?? localTransit?.pada,
+        retrograde:planet.retrograde ?? localTransit?.retrograde ?? false,
+        dignity:planet.dignity ?? (localTransit as any)?.dignity,
         aspectsToNatal:localTransit?.aspectsToNatal ?? []
       };
     });
