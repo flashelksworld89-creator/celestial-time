@@ -306,6 +306,31 @@ function rulershipTransitAnalysis(house:HouseContext,transit:JHTransitPlanet|und
   return [intro,pathways,signNakshatra,aspectModifier,retro].filter(Boolean).join(" ");
 }
 
+const charaKarakaMeaning: Record<string,string> = {
+  Atmakaraka:"your core self, identity development, central life direction and personally significant lessons",
+  Amatyakaraka:"career, work, responsibility, skill, professional decisions and how you function in the world",
+  Bhratrikaraka:"siblings, peers, courage, initiative, communication and cooperative effort",
+  Matrikaraka:"mother, caregiving, emotional foundations, home support and nurturing relationships",
+  "Pitri Karaka":"father, ancestry, guidance, authority, lineage and inherited responsibilities",
+  Putrakaraka:"children, creativity, intelligence, learning, teaching, legacy and what you produce",
+  Gnatikaraka:"conflict, competition, obstacles, illness, debts, relatives and situations requiring problem-solving",
+  Darakaraka:"spouse, committed partners, significant one-to-one relationships, agreements and the experience of relating closely to others"
+};
+
+function charaKarakaAnalysis(planet:Planet, role:string|undefined, transit:JHTransitPlanet|undefined, ruledHouses:RuledHouse[]) {
+  if (!role || !transit) return "";
+  const meaning=charaKarakaMeaning[role];
+  if (!meaning) return "";
+  const transitArea=transit.house ? houseActivation[transit.house] : "the current transit area";
+  const ruled=ruledHouses.length ? ruledHouses.map(h=>`${ordinal(h.house)} house of ${h.lifeArea.toLowerCase()}`).join(" and ") : "the natal houses this planet rules";
+  const roleFocus=`Because ${planet} is your ${role}, it also carries a personal role connected with ${meaning}.`;
+  const synthesis=`As ${planet} moves through ${transitArea}, this Chara Karaka role can become personally active through ${ruled}.`;
+  const dk=role==="Darakaraka" ? "This makes partners, relationship decisions, agreements or the behavior of an important one-to-one connection more relevant to the transit, especially when the transit house itself supports relationship, romance, family or shared-life themes." : "";
+  const ak=role==="Atmakaraka" ? "This can make the transit feel more personally defining, bringing choices that affect identity, direction or what you consider meaningful." : "";
+  const amk=role==="Amatyakaraka" ? "This can connect the transit more strongly with work, career decisions, responsibilities, skills or professional relationships." : "";
+  return [roleFocus,synthesis,dk,ak,amk].filter(Boolean).join(" ");
+};
+
 function personalizedExamples(planet:Planet, transit:JHTransitPlanet|undefined, ruledHouses:RuledHouse[]) {
   if (!transit?.house) return "";
   const transitExamples=houseOutcome[transit.house] ?? [];
@@ -415,6 +440,7 @@ export function synthesizeHouseInterpretation(args:{
     interpretation:[baseline,natalCondition,transitCondition,concrete,retro,karaka].filter(Boolean).join(" "),
     deepAnalysis:rulershipTransitAnalysis(house,transit,ruledHouses),
     karakaAnalysis:naturalKarakaAnalysis(house.lord,transit),
+    charaKarakaAnalysis:charaKarakaAnalysis(house.lord,natal?.charaKaraka,transit,ruledHouses),
     examples:personalizedExamples(house.lord,transit,ruledHouses),
     advice:personalizedAdvice(house.lord,transit,ruledHouses),
     evidence:{
