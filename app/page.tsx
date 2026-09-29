@@ -73,6 +73,7 @@ export default function Home() {
   const [jagannathaTopicInterpretations, setJagannathaTopicInterpretations] = useState<Record<number, string>>({});
   const [jagannathaKarakaAnalysis, setJagannathaKarakaAnalysis] = useState<Record<number, string>>({});
   const [jagannathaCharaKarakaAnalysis, setJagannathaCharaKarakaAnalysis] = useState<Record<number, string>>({});
+  const [jagannathaCharaKarakaDispositorAnalysis, setJagannathaCharaKarakaDispositorAnalysis] = useState<Record<number, string>>({});
   const [jagannathaBodyHealthAnalysis, setJagannathaBodyHealthAnalysis] = useState<Record<number, string>>({});
   const [jagannathaExamples, setJagannathaExamples] = useState<Record<number, string>>({});
   const [jagannathaAdvice, setJagannathaAdvice] = useState<Record<number, string>>({});
@@ -107,6 +108,7 @@ export default function Home() {
       setJagannathaTopicInterpretations({});
       setJagannathaKarakaAnalysis({});
       setJagannathaCharaKarakaAnalysis({});
+      setJagannathaCharaKarakaDispositorAnalysis({});
       setJagannathaBodyHealthAnalysis({});
       setJagannathaExamples({});
       setJagannathaAdvice({});
@@ -147,6 +149,7 @@ export default function Home() {
       const topics: Record<number, string> = {};
       const karaka: Record<number, string> = {};
       const charaKaraka: Record<number, string> = {};
+      const charaKarakaDispositor: Record<number, string> = {};
       const bodyHealth: Record<number, string> = {};
       const examples: Record<number, string> = {};
       const advice: Record<number, string> = {};
@@ -166,6 +169,9 @@ export default function Home() {
         if (typeof item.house === "number" && typeof item.charaKarakaAnalysis === "string") {
           charaKaraka[item.house] = item.charaKarakaAnalysis;
         }
+        if (typeof item.house === "number" && typeof item.charaKarakaDispositorAnalysis === "string") {
+          charaKarakaDispositor[item.house] = item.charaKarakaDispositorAnalysis;
+        }
         if (typeof item.house === "number" && typeof item.bodyHealthAnalysis === "string") {
           bodyHealth[item.house] = item.bodyHealthAnalysis;
         }
@@ -181,6 +187,7 @@ export default function Home() {
       setJagannathaTopicInterpretations(topics);
       setJagannathaKarakaAnalysis(karaka);
       setJagannathaCharaKarakaAnalysis(charaKaraka);
+      setJagannathaCharaKarakaDispositorAnalysis(charaKarakaDispositor);
       setJagannathaBodyHealthAnalysis(bodyHealth);
       setJagannathaExamples(examples);
       setJagannathaAdvice(advice);
@@ -498,6 +505,13 @@ export default function Home() {
                     <div className="deep-analysis karaka-analysis">
                       <small>Chara Karaka effect</small>
                       <p>{jagannathaCharaKarakaAnalysis[item.house]}</p>
+                    </div>
+                  )}
+
+                  {jagannathaCharaKarakaDispositorAnalysis[item.house] && (
+                    <div className="deep-analysis karaka-analysis">
+                      <small>Chara Karaka dispositor</small>
+                      <p>{jagannathaCharaKarakaDispositorAnalysis[item.house]}</p>
                     </div>
                   )}
 
