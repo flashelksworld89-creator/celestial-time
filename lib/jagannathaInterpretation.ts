@@ -227,11 +227,13 @@ function naturalKarakaAnalysis(planet:Planet,transit:JHTransitPlanet|undefined) 
   const dignity=transit.dignity?.toLowerCase() ?? "";
   const strained=["enemy","enemy sign","debilitated","debilitation"].includes(dignity);
   const supported=["exalted","exaltation","moolatrikona","own","own sign","friendly","friend sign"].includes(dignity);
+  const conditionLabel = transit.dignity ? `${planet} is currently ${transit.dignity}` : `${planet} has a mixed or unclassified dignity`;
+  const motionLabel = transit.retrograde ? "retrograde" : "direct";
   const condition=supported
-    ? `Its condition favors the constructive expression of its karaka themes: ${effect.constructive}.`
+    ? `${conditionLabel} and ${motionLabel}. This supports the constructive expression of its karaka themes: ${effect.constructive}.`
     : strained
-      ? `Its condition puts more pressure on its karaka themes, so ${effect.challenging} may be more noticeable.`
-      : `Its karaka themes can work in both directions: ${effect.constructive}, while pressure can produce ${effect.challenging}.`;
+      ? `${conditionLabel} and ${motionLabel}. This places more pressure on its karaka themes, making ${effect.challenging} more likely.`
+      : `${conditionLabel} and ${motionLabel}. This gives a mixed expression: ${effect.constructive}; under pressure, ${effect.challenging}.`;
   const manifestation=`As a natural karaka, ${planet} signifies ${naturalMeanings[planet]}. While transiting ${transitArea}, it can produce ${effect.produces} through that area of life.`;
   const aspects=aspectConsequences(transit.aspectsToNatal);
   const aspectText=aspects ? `Its current aspect pattern further modifies the karaka expression: ${aspects}.` : "";
