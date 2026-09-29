@@ -129,6 +129,45 @@ const houseOutcome: Record<number,string[]> = {
   11:["income or gains","network, audience or friendship developments","results, opportunities or fulfillment of objectives"],
   12:["expenses or losses","foreign or behind-the-scenes activity","withdrawal, sleep, endings or private work"]
 };
+const houseTopics: Record<number,string[]> = {
+  1:["identity","body","personal direction","visibility","initiative"],
+  2:["money","speech","family","possessions","financial security"],
+  3:["communication","paperwork","skills","short travel","siblings"],
+  4:["home","property","vehicles","family foundations","inner security"],
+  5:["children","creativity","study","judgment","romance","performance","personal projects"],
+  6:["workload","daily routines","service","disputes","debts","maintenance","health routines"],
+  7:["partnership","clients","contracts","negotiation","direct encounters"],
+  8:["shared finances","vulnerability","disruptions","research","hidden matters","major adjustments"],
+  9:["teachers","beliefs","higher learning","legal matters","long-distance travel","guidance"],
+  10:["career","bosses","responsibility","reputation","public action","status"],
+  11:["income","gains","networks","audiences","friends","objectives"],
+  12:["expenses","withdrawal","sleep","foreign places","endings","private work"]
+};
+
+function topicEffect(topic:string, planet:Planet, transit:JHTransitPlanet, ruledHouses:RuledHouse[]) {
+  const effect=transitEffects[planet];
+  const ruled=ruledHouses.map(h=>h.lifeArea.toLowerCase()).join(" and ");
+  const dignity=(transit.dignity ?? "").toLowerCase();
+  const strained=["enemy","enemy sign","debilitated","debilitation"].includes(dignity);
+  const supported=["exalted","exaltation","moolatrikona","own","own sign","friendly","friend sign"].includes(dignity);
+
+  const tone=supported
+    ? `This is more likely to develop constructively through ${effect.constructive}.`
+    : strained
+      ? `This area may require more care because ${planet} is under strain, increasing the chance of ${effect.challenging}.`
+      : `The result is mixed and depends on how well the native handles ${effect.constructive} versus ${effect.challenging}.`;
+
+  const ruledTie=ruled ? ` Because ${planet} rules ${ruled}, developments in ${topic} can directly affect those areas of the native's life.` : "";
+  const retro=transit.retrograde ? ` Retrograde motion can bring review, repetition, return or unfinished matters involving ${topic}.` : "";
+  return `${topic[0].toUpperCase()+topic.slice(1)}: ${planet} is actively influencing ${topic} through this transit.${ruledTie} ${tone}${retro}`;
+}
+
+function topicInterpretations(planet:Planet, transit:JHTransitPlanet|undefined, ruledHouses:RuledHouse[]) {
+  if (!transit?.house) return "";
+  const topics=houseTopics[transit.house] ?? [];
+  return topics.map(topic=>topicEffect(topic,planet,transit,ruledHouses)).join("\n\n");
+}
+
 
 const sourceToDestinationExamples: Record<number,Record<number,string>> = {
   10:{
@@ -466,6 +505,7 @@ export function synthesizeHouseInterpretation(args:{
     headline: `${house.lifeArea}: ${house.lord} activation`,
     interpretation:[baseline,transitCondition,concrete,retro,karaka].filter(Boolean).join(" "),
     deepAnalysis:rulershipTransitAnalysis(house,transit,ruledHouses),
+    topicInterpretations:topicInterpretations(house.lord,transit,ruledHouses),
     karakaAnalysis:naturalKarakaAnalysis(house.lord,transit,allHouses,allNatal),
     charaKarakaAnalysis:charaKarakaAnalysis(house.lord,natal?.charaKaraka,transit,ruledHouses),
     bodyHealthAnalysis:bodyHealthAnalysis(house.lord,house,transit,ruledHouses),
