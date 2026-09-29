@@ -256,11 +256,21 @@ function aspectConsequences(aspects?: string[]) {
   return effects.join("; ");
 }
 
+function ordinal(n:number) {
+  const mod100=n%100;
+  if (mod100>=11 && mod100<=13) return `${n}th`;
+  if (n%10===1) return `${n}st`;
+  if (n%10===2) return `${n}nd`;
+  if (n%10===3) return `${n}rd`;
+  return `${n}th`;
+}
+
 function ruledHousePrediction(planet:Planet, ruled:RuledHouse, transitHouse?:number) {
-  const source=houseActivation[ruled.house] ?? ruled.lifeArea.toLowerCase();
-  const destination=transitHouse ? houseActivation[transitHouse] : "the house being transited";
   const specific=relationshipSpecificOutcome(ruled.house,transitHouse);
-  return `As ruler of house ${ruled.house} (${ruled.lifeArea}), ${planet} carries matters of ${source} into ${destination}. ${specific}`;
+  if (!transitHouse) {
+    return `${planet} rules your ${ordinal(ruled.house)} house of ${ruled.lifeArea.toLowerCase()}, keeping this area central to the transit.`;
+  }
+  return `For your ${ordinal(ruled.house)} house of ${ruled.lifeArea.toLowerCase()}, this can show up as ${specific}.`;
 }
 
 function rulershipTransitAnalysis(house:HouseContext,transit:JHTransitPlanet|undefined,ruledHouses:RuledHouse[]) {
@@ -268,17 +278,19 @@ function rulershipTransitAnalysis(house:HouseContext,transit:JHTransitPlanet|und
   const planet=house.lord;
   const activatedHouse=transit.house;
   const ruled=ruledHouses.length ? ruledHouses : [{house:house.house,lifeArea:house.lifeArea}];
+  const ruledText=ruled.map(item=>`${ordinal(item.house)} house of ${item.lifeArea.toLowerCase()}`).join(" and ");
+  const transitTheme=activatedHouse ? houseActivation[activatedHouse] : "the area occupied by the transit";
   const intro=activatedHouse
-    ? `${planet} is transiting house ${activatedHouse}. This prediction is limited to the natal houses ${planet} rules.`
-    : `${planet}'s transit is interpreted only through the natal houses it rules.`;
+    ? `${planet} is moving through your ${ordinal(activatedHouse)} house, activating your ${ruledText}. This can make ${transitTheme} directly affect those parts of your life.`
+    : `${planet} is activating your ${ruledText}.`;
   const pathways=ruled.map(item=>ruledHousePrediction(planet,item,activatedHouse)).join(" ");
+  const signNakshatra=signNakshatraModifier(transit);
   const aspectModifier=transit.aspectsToNatal?.length
-    ? `Current aspects can intensify or redirect these results, but the affected subjects remain ${ruled.map(item=>`house ${item.house} (${item.lifeArea})`).join(" and ")}.`
+    ? `The current aspects sharpen the timing and can redirect how these themes manifest, while the main story remains centered on ${ruled.map(item=>item.lifeArea.toLowerCase()).join(" and ")}.`
     : "";
   const retro=transit.retrograde
-    ? `Because ${planet} is retrograde, these ruled-house matters are more likely to involve review, return, repetition, renegotiation, correction or unfinished business.`
+    ? `Because ${planet} is retrograde, expect more review, repetition, renegotiation or unfinished matters before the situation settles.`
     : "";
-  const signNakshatra=signNakshatraModifier(transit);
   return [intro,pathways,signNakshatra,aspectModifier,retro].filter(Boolean).join(" ");
 }
 
