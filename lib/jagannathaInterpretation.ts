@@ -282,6 +282,50 @@ function rulershipTransitAnalysis(house:HouseContext,transit:JHTransitPlanet|und
   return [intro,pathways,signNakshatra,aspectModifier,retro].filter(Boolean).join(" ");
 }
 
+function personalizedExamples(planet:Planet, transit:JHTransitPlanet|undefined, ruledHouses:RuledHouse[]) {
+  if (!transit?.house) return "";
+  const transitExamples=houseOutcome[transit.house] ?? [];
+  const ruledLabels=ruledHouses.map(h=>`house ${h.house} (${h.lifeArea})`);
+  const sign=transit.sign ? ` in ${transit.sign}` : "";
+  const nak=transit.nakshatra ? ` through ${transit.nakshatra}` : "";
+  const examples=ruledHouses.slice(0,2).map((ruled,i)=>{
+    const base=relationshipSpecificOutcome(ruled.house,transit.house);
+    const concrete=transitExamples[i % Math.max(transitExamples.length,1)] ?? "a noticeable development";
+    return `${concrete}: ${base}`;
+  });
+  if (!examples.length) return "";
+  return `Examples${sign}${nak}: ${examples.join(" Another possibility is ")}.`;
+}
+
+function personalizedAdvice(planet:Planet, transit:JHTransitPlanet|undefined, ruledHouses:RuledHouse[]) {
+  if (!transit) return "";
+  const dignity=(transit.dignity ?? "").toLowerCase();
+  const strained=["enemy","enemy sign","debilitated","debilitation"].includes(dignity);
+  const supported=["exalted","exaltation","moolatrikona","own","own sign","friendly","friend sign"].includes(dignity);
+  const ruled=ruledHouses.map(h=>`house ${h.house}`).join(" and ");
+  const nak=transit.nakshatra ? nakshatraMeaning[transit.nakshatra] : undefined;
+
+  const conditionAdvice=supported
+    ? `${planet}'s current condition is relatively supportive, so use the transit proactively rather than waiting for circumstances to force a response.`
+    : strained
+      ? `${planet}'s current condition is strained, so slow decisions down, verify details, and avoid forcing results in the areas governed by ${ruled || "this planet"}.`
+      : `${planet}'s condition is mixed, so stay flexible and judge results by what is actually developing rather than assuming the transit is entirely positive or negative.`;
+
+  const retroAdvice=transit.retrograde
+    ? `Because ${planet} is retrograde, review earlier decisions, unfinished conversations, prior agreements or recurring issues before starting something completely new.`
+    : `Because ${planet} is direct, forward movement is generally easier once the facts are clear.`;
+
+  const signAdvice=transit.sign && signMeaning[transit.sign as Sign]
+    ? `Work with the ${transit.sign} style of ${signMeaning[transit.sign as Sign]}.`
+    : "";
+
+  const nakAdvice=nak
+    ? `The ${transit.nakshatra} pattern favors ${nak.meaning}; use that as the practical strategy for handling the transit.`
+    : "";
+
+  return `Advice: ${[conditionAdvice,retroAdvice,signAdvice,nakAdvice].filter(Boolean).join(" ")}`;
+}
+
 function naturalKarakaAnalysis(planet:Planet,transit:JHTransitPlanet|undefined) {
   if (!transit) return "";
   const effect=transitEffects[planet];
@@ -347,6 +391,8 @@ export function synthesizeHouseInterpretation(args:{
     interpretation:[baseline,natalCondition,transitCondition,concrete,retro,karaka].filter(Boolean).join(" "),
     deepAnalysis:rulershipTransitAnalysis(house,transit,ruledHouses),
     karakaAnalysis:naturalKarakaAnalysis(house.lord,transit),
+    examples:personalizedExamples(house.lord,transit,ruledHouses),
+    advice:personalizedAdvice(house.lord,transit,ruledHouses),
     evidence:{
       natalHouse:natal?.house,
       natalSign:natal?.sign,
