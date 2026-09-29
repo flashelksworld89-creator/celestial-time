@@ -53,6 +53,59 @@ const houseActivation: Record<number,string> = {
   12:"expenses, withdrawal, sleep, foreign places, endings, private work and matters happening out of view"
 };
 
+
+const houseOutcome: Record<number,string[]> = {
+  1:["personal decisions","changes in visibility or self-presentation","taking direct control of a matter"],
+  2:["income or spending decisions","family discussions","financial paperwork or changes in possessions"],
+  3:["calls, messages or negotiations","short trips or errands","skill-building, sales, writing or paperwork"],
+  4:["home or property changes","vehicle or domestic responsibilities","family or private-life decisions"],
+  5:["creative output or study","children or romance matters","performance, teaching or speculative decisions"],
+  6:["workload or service obligations","conflict resolution, debts or maintenance","health-routine or scheduling adjustments"],
+  7:["partnership or client developments","contracts and negotiations","direct encounters, agreements or disputes"],
+  8:["shared-finance or debt matters","investigation, secrets or sudden changes","major adjustments, vulnerability or endings"],
+  9:["travel, education or legal matters","teachers, advisors or institutions","belief, certification or long-range planning"],
+  10:["career decisions","boss or authority interactions","public responsibilities, reputation or status changes"],
+  11:["income or gains","network, audience or friendship developments","results, opportunities or fulfillment of objectives"],
+  12:["expenses or losses","foreign or behind-the-scenes activity","withdrawal, sleep, endings or private work"]
+};
+
+const sourceToDestinationExamples: Record<number,Record<number,string>> = {
+  10:{
+    4:"career responsibilities can enter the home through remote work, property decisions, family obligations, relocation questions or a need to balance public duties with private life",
+    11:"career activity can translate into gains, recognition, new professional networks, audience growth, bonuses or results from previous work",
+    3:"career matters can be advanced through communication, marketing, paperwork, training, local travel or independent initiative",
+    7:"career matters can become dependent on clients, contracts, partnerships, negotiations or direct dealings with the public"
+  },
+  2:{
+    3:"money and family matters can move through sales, messages, paperwork, short travel, siblings or newly developed skills",
+    11:"stored resources can connect with income, gains, networks and the fulfillment of financial goals",
+    4:"money can be redirected toward home, property, vehicles or family needs",
+    7:"finances can become tied to agreements, partners, clients or shared decision-making"
+  },
+  7:{
+    10:"partnership or client matters can directly affect career, public standing and professional responsibility",
+    4:"relationships can produce home, property, relocation or family decisions",
+    11:"partnerships can bring gains, introductions, network access or the fulfillment of shared goals",
+    3:"relationships can become active through conversations, messages, contracts, short trips or repeated negotiations"
+  },
+  11:{
+    3:"income, gains and goals can be pursued through communication, sales, social media, writing, skills or local movement",
+    10:"gains can come through career visibility, promotions, authority figures, leadership or increased responsibility",
+    4:"income or gains can be redirected into property, home improvements, vehicles or family security",
+    7:"gains can come through clients, partners, contracts, alliances or social connections"
+  }
+};
+
+function relationshipSpecificOutcome(ruledHouse:number, transitHouse?:number) {
+  if (!transitHouse) return "";
+  const exact=sourceToDestinationExamples[ruledHouse]?.[transitHouse];
+  if (exact) return exact;
+  const examples=houseOutcome[transitHouse] ?? [];
+  const source=houseActivation[ruledHouse] ?? `house ${ruledHouse} matters`;
+  if (!examples.length) return `${source} can become active through the transit house.`;
+  return `${source} can produce concrete events such as ${examples.join(", ")} because those ruled-house topics are being expressed through house ${transitHouse}.`;
+}
+
 const transitEffects: Record<Planet,{constructive:string;challenging:string;produces:string}> = {
   Sun:{
     constructive:"greater visibility, leadership, decisiveness, contact with authority and a need to define priorities",
@@ -145,7 +198,8 @@ function aspectConsequences(aspects?: string[]) {
 function ruledHousePrediction(planet:Planet, ruled:RuledHouse, transitHouse?:number) {
   const source=houseActivation[ruled.house] ?? ruled.lifeArea.toLowerCase();
   const destination=transitHouse ? houseActivation[transitHouse] : "the house being transited";
-  return `As ruler of house ${ruled.house} (${ruled.lifeArea}), ${planet} carries matters of ${source} into ${destination}. This means events in the transit house can directly trigger developments in the ruled house, and developments in the ruled house can arrive through people, places, duties or circumstances belonging to the transit house.`;
+  const specific=relationshipSpecificOutcome(ruled.house,transitHouse);
+  return `As ruler of house ${ruled.house} (${ruled.lifeArea}), ${planet} carries matters of ${source} into ${destination}. ${specific}`;
 }
 
 function deeperTransitAnalysis(house:HouseContext,natal:PlacementContext|undefined,transit:JHTransitPlanet|undefined,ruledHouses:RuledHouse[]) {
