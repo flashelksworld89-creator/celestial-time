@@ -53,6 +53,67 @@ const houseActivation: Record<number,string> = {
   12:"expenses, withdrawal, sleep, foreign places, endings, private work and matters happening out of view"
 };
 
+const signMeaning: Record<Sign,string> = {
+  Aries:"initiative, urgency, independence, competition and starting action",
+  Taurus:"stability, resources, security, comfort, values and material continuity",
+  Gemini:"communication, learning, movement, comparison, trade and multiple options",
+  Cancer:"home, protection, care, memory, family and emotional security",
+  Leo:"visibility, authority, creativity, pride, leadership and self-expression",
+  Virgo:"analysis, organization, service, correction, skill and practical problem-solving",
+  Libra:"partnership, agreement, balance, negotiation, social exchange and fairness",
+  Scorpio:"intensity, secrecy, investigation, vulnerability, control and transformation",
+  Sagittarius:"belief, teaching, travel, expansion, law, guidance and long-range direction",
+  Capricorn:"duty, structure, status, endurance, hierarchy and measurable results",
+  Aquarius:"networks, systems, communities, unconventional ideas, reform and collective goals",
+  Pisces:"imagination, surrender, compassion, retreat, spirituality and diffuse boundaries"
+};
+
+type NakMeaning={lord:Planet;nature:string;meaning:string};
+
+const nakshatraMeaning: Record<string,NakMeaning> = {
+  Ashwini:{lord:"Ketu",nature:"quick",meaning:"beginnings, speed, healing, rescue, movement and rapid intervention"},
+  Bharani:{lord:"Venus",nature:"fierce",meaning:"containment, responsibility, pressure, endurance, consequences and carrying something to completion"},
+  Krittika:{lord:"Sun",nature:"mixed",meaning:"cutting, purification, separation, decisive judgment and removing what is unnecessary"},
+  Rohini:{lord:"Moon",nature:"fixed",meaning:"growth, fertility, attraction, creation, comfort, accumulation and material development"},
+  Mrigashira:{lord:"Mars",nature:"gentle",meaning:"searching, curiosity, exploration, investigation, movement and looking for a better option"},
+  Ardra:{lord:"Rahu",nature:"sharp",meaning:"disruption, storms, grief, breaking patterns, intense learning and rebuilding after disturbance"},
+  Punarvasu:{lord:"Jupiter",nature:"movable",meaning:"return, restoration, renewal, repetition, homecoming and recovering what was lost"},
+  Pushya:{lord:"Saturn",nature:"quick",meaning:"nourishment, support, duty, teaching, protection, growth through discipline and sustaining others"},
+  Ashlesha:{lord:"Mercury",nature:"sharp",meaning:"entanglement, strategy, persuasion, hidden motives, binding agreements and psychological complexity"},
+  Magha:{lord:"Ketu",nature:"fierce",meaning:"ancestry, status, inheritance, authority, tradition, lineage and obligations to the past"},
+  "Purva Phalguni":{lord:"Venus",nature:"fierce",meaning:"pleasure, attraction, romance, creativity, rest, enjoyment and social connection"},
+  "Uttara Phalguni":{lord:"Sun",nature:"fixed",meaning:"contracts, patronage, commitments, alliances, support and making arrangements durable"},
+  Hasta:{lord:"Moon",nature:"quick",meaning:"skill, hands-on work, crafting, control, negotiation, practical execution and making something tangible"},
+  Chitra:{lord:"Mars",nature:"gentle",meaning:"design, construction, beauty, craftsmanship, image, refinement and creating a visible result"},
+  Swati:{lord:"Rahu",nature:"movable",meaning:"independence, trade, flexibility, dispersion, wind-like movement and learning through autonomy"},
+  Vishakha:{lord:"Jupiter",nature:"mixed",meaning:"goal pursuit, competition, branching choices, ambition, persistence and reaching a target"},
+  Anuradha:{lord:"Saturn",nature:"gentle",meaning:"friendship, loyalty, cooperation, devotion, organization and success through alliances"},
+  Jyeshtha:{lord:"Mercury",nature:"sharp",meaning:"seniority, protection, responsibility, strategy, crisis management and defending position"},
+  Mula:{lord:"Ketu",nature:"sharp",meaning:"uprooting, investigation, origins, elimination, truth-seeking and rebuilding from the root"},
+  "Purva Ashadha":{lord:"Venus",nature:"fierce",meaning:"campaigning, persuasion, declaration, confidence, cleansing and refusing defeat"},
+  "Uttara Ashadha":{lord:"Sun",nature:"fixed",meaning:"lasting achievement, duty, leadership, integrity, consolidation and long-term victory"},
+  Shravana:{lord:"Moon",nature:"movable",meaning:"listening, learning, information, reputation, travel, transmission and following established paths"},
+  Dhanishtha:{lord:"Mars",nature:"movable",meaning:"timing, resources, wealth, performance, groups, rhythm and coordinated action"},
+  Shatabhisha:{lord:"Rahu",nature:"movable",meaning:"healing, diagnosis, isolation, technology, research, secrecy and solving complex problems"},
+  "Purva Bhadrapada":{lord:"Jupiter",nature:"fierce",meaning:"intensity, conviction, sacrifice, transformation, idealism and confronting extremes"},
+  "Uttara Bhadrapada":{lord:"Saturn",nature:"fixed",meaning:"depth, patience, stability, responsibility, endings, maturity and sustaining long processes"},
+  Revati:{lord:"Mercury",nature:"gentle",meaning:"completion, guidance, safe travel, transition, protection, nourishment and bringing matters to a close"}
+};
+
+function signNakshatraModifier(transit:JHTransitPlanet|undefined) {
+  if (!transit) return "";
+  const sign=transit.sign as Sign | undefined;
+  const signText=sign && signMeaning[sign]
+    ? `In ${sign}, the transit operates through ${signMeaning[sign]}.`
+    : "";
+  const nak=transit.nakshatra ? nakshatraMeaning[transit.nakshatra] : undefined;
+  const nakText=nak
+    ? `In ${transit.nakshatra}, ruled by ${nak.lord}, the event pattern emphasizes ${nak.meaning}. Its ${nak.nature} nature describes the way events tend to develop rather than changing which natal houses are activated.`
+    : "";
+  return [signText,nakText].filter(Boolean).join(" ");
+}
+
+
 
 const houseOutcome: Record<number,string[]> = {
   1:["personal decisions","changes in visibility or self-presentation","taking direct control of a matter"],
@@ -217,7 +278,8 @@ function rulershipTransitAnalysis(house:HouseContext,transit:JHTransitPlanet|und
   const retro=transit.retrograde
     ? `Because ${planet} is retrograde, these ruled-house matters are more likely to involve review, return, repetition, renegotiation, correction or unfinished business.`
     : "";
-  return [intro,pathways,aspectModifier,retro].filter(Boolean).join(" ");
+  const signNakshatra=signNakshatraModifier(transit);
+  return [intro,pathways,signNakshatra,aspectModifier,retro].filter(Boolean).join(" ");
 }
 
 function naturalKarakaAnalysis(planet:Planet,transit:JHTransitPlanet|undefined) {
@@ -240,7 +302,8 @@ function naturalKarakaAnalysis(planet:Planet,transit:JHTransitPlanet|undefined) 
   const retro=transit.retrograde
     ? `Retrograde motion can turn the karaka themes toward revision, reconnection, reconsideration or the return of earlier situations.`
     : "";
-  return [manifestation,condition,aspectText,retro].filter(Boolean).join(" ");
+  const signNakshatra=signNakshatraModifier(transit);
+  return [manifestation,condition,signNakshatra,aspectText,retro].filter(Boolean).join(" ");
 }
 
 export function synthesizeHouseInterpretation(args:{
