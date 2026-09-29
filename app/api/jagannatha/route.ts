@@ -175,7 +175,9 @@ export async function POST(req:NextRequest) {
           house:house as any,
           natal:natal as any,
           transit,
-          ruledHouses
+          ruledHouses,
+          allHouses:body.houses as any,
+          allNatal:body.natal as any
         })
       };
     });
