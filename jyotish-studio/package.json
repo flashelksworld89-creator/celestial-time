@@ -9,7 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@swisseph/browser": "^0.1.0"
+    "@swisseph/browser": "1.4.0"
   },
   "devDependencies": {
     "vite": "^7.1.0"
